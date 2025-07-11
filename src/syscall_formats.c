@@ -51,7 +51,7 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_stat
 	SARGS(stat, rdec, arg_cstr, arg_pointer),
 #endif
-	SARGS(fstat, rdec, arg_fd, arg_pointer),
+	SARGS(fstat, rdec, arg_atfd, arg_pointer),
 #ifdef SYS_lstat
 	SARGS(lstat, rdec, arg_cstr, arg_pointer),
 #endif
