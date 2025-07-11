@@ -309,6 +309,14 @@ main(int argc, char **argv)
 	stat(NULL, &statbuf);
 	stat("/", &statbuf);
 	fstat(0, NULL);
+	/*
+	 * fstat implementation from some glibc versions doesn't invoke kernel if
+	 * fd is negative so the related expected entries in
+	 * syscall_format_logging.match (79-82) of the next two calls are marked
+	 * with optional token $(OPT)
+	 */
+	fstat(-1, NULL);
+	fstat(AT_FDCWD, &statbuf);
 	fstat(2, &statbuf);
 	lstat(NULL, NULL);
 	lstat("/", NULL);
