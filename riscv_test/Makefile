@@ -1,6 +1,6 @@
 CC = gcc
-CFLAGS += -I../../include
-CFLAGS += -L../../build
+CFLAGS += -I../include
+CFLAGS += -L../build
 CFLAGS += -lsyscall_intercept
 CFLAGS += -fpic -shared
 
@@ -8,7 +8,7 @@ BIN_DIR = bin
 BUILD_DIR = build
 SRC_DIR = src
 
-LD_LIBRARY_PATH = ./build:../../build
+LD_LIBRARY_PATH = ./build:../build
 LD_PRELOAD = ./build
 
 TESTS += fcntl
