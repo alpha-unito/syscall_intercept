@@ -555,8 +555,8 @@ create_j(unsigned char *from, void *to)
 	uint32_t *instructions = (uint32_t *)from;
 	debug_dump("%p: ecall -> jalr %ld\t# %p\n", from, delta, to);
 
-	const ptrdiff_t JALR_MAX_OFFSET =  2147481598; // ((2^31-1)-4095)+(2^11-1) = 0x7ffff000 + 0x7ff
-	const ptrdiff_t JALR_MIN_OFFSET = -2147483648; // (-2^31) = -0x80000000
+	const ptrdiff_t JALR_MAX_OFFSET =  ABS_MAX_POS_OFFSET; // ((2^31-1)-4095)+(2^11-2) = 0x7ffff000 + 0x7fe
+	const ptrdiff_t JALR_MIN_OFFSET = -(ABS_MAX_NEG_OFFSET); // (-2^31) = -0x80000000 - 0x800
 
 	if ((delta & 0x1) != 0) {
 

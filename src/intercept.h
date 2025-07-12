@@ -245,6 +245,8 @@ void activate_patches(struct intercept_desc *desc);
 #define SIXTH_ARG_REG PARAM_BY_ARCH(context->r9,context->a[5])
 #define FIRST_RET_REG PARAM_BY_ARCH(.rax,.a[0])
 #define SECOND_RET_REG PARAM_BY_ARCH(.rdx,.a[1])
+#define ABS_MAX_NEG_OFFSET PARAM_BY_ARCH(INT32_MAX,((long)INT32_MAX+0x800))
+#define ABS_MAX_POS_OFFSET PARAM_BY_ARCH(INT32_MAX,INT32_MAX-0x801)
 
 bool is_overwritable_nop(const struct intercept_disasm_result *ins);
 

@@ -631,7 +631,7 @@ allocate_trampoline_table(struct intercept_desc *desc)
 	unsigned char *guess; /* Where we would like to allocate the table */
 	size_t size;
 
-	if ((uintptr_t)desc->text_end < INT32_MAX) {
+	if ((uintptr_t)desc->text_end < ABS_MAX_NEG_OFFSET) {
 		/* start from the bottom of memory */
 		guess = (void *)0;
 	} else {
@@ -641,7 +641,7 @@ allocate_trampoline_table(struct intercept_desc *desc)
 		 * Round up to a memory page boundary, as this address must be
 		 * mappable.
 		 */
-		guess = desc->text_end - INT32_MAX;
+		guess = desc->text_end - ABS_MAX_NEG_OFFSET;
 		guess = (unsigned char *)(((uintptr_t)guess)
 				& ~((uintptr_t)(0xfff))) + 0x1000;
 	}
@@ -679,7 +679,7 @@ allocate_trampoline_table(struct intercept_desc *desc)
 		 */
 		guess = end;
 
-		if (guess + size >= desc->text_start + INT32_MAX) {
+		if (guess + size >= desc->text_start + ABS_MAX_POS_OFFSET) {
 			/* Too far away */
 			xabort("unable to find place for trampoline table");
 		}
