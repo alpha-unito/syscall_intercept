@@ -70,7 +70,7 @@ make test
 Testing on **RISC-V**:
 ```shell
 # From the project root directory
-cd test/riscv/
+cd riscv_test/
 make
 make test
 ```
