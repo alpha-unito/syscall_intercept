@@ -717,6 +717,7 @@ intercept_routine(struct context *context)
 		 * the clone_child_intercept_routine instead, executing
 		 * it on the new child threads stack, then returns to libc.
 		 */
+#if defined(__x86_64__) || defined(_M_X64)
 		if (desc.nr == SYS_clone && desc.args[1] != 0) {
 			return (struct wrapper_ret){
 				FIRST_RET_REG = SYSCALL_NR, SECOND_RET_REG = 2 };
@@ -729,6 +730,7 @@ intercept_routine(struct context *context)
 		}
 #endif
 		else
+#endif
 			result = syscall_no_intercept(desc.nr,
 					desc.args[0],
 					desc.args[1],
