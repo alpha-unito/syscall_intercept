@@ -11,8 +11,8 @@ SRC_DIR = src
 LD_LIBRARY_PATH = ./build:../build
 LD_PRELOAD = ./build
 
-TESTS += fcntl
 TESTS += mkdirat
+TESTS += fcntl
 TESTS += openat
 TESTS += read
 TESTS += statx
