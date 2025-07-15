@@ -83,7 +83,6 @@
 #include <sys/file.h>
 #include <sys/fsuid.h>
 #include <sys/inotify.h>
-#include <sys/io.h>
 #include <sys/ioctl.h>
 #include <sys/ipc.h>
 #include <sys/mman.h>
@@ -118,6 +117,9 @@
 
 #ifdef SYS_arch_prctl
 	#include <asm/prctl.h>
+#endif
+#ifdef SYS_iopl || SYS_ioperm
+	#include <sys/io.h>
 #endif
 
 #include "libsyscall_intercept_hook_point.h"
@@ -642,9 +644,12 @@ main(int argc, char **argv)
 
 	sethostname(input[0], len0);
 	setdomainname(input[0], len0);
-
+#ifdef SYS_iopl
 	iopl(1);
+#endif
+#ifdef SYS_ioperm
 	ioperm(3, 4, 1);
+#endif
 
 	syscall(SYS_init_module, p0, 16, p1);
 	syscall(SYS_finit_module, 3, p0, 0);
