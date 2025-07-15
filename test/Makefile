@@ -44,6 +44,7 @@ LD_PRELOAD = ./build
 
 TESTS += clone
 TESTS += fcntl
+TESTS += fork
 TESTS += mkdirat
 TESTS += openat
 TESTS += read
@@ -52,6 +53,7 @@ TESTS += write
 
 EXECUTABLES += $(BIN_DIR)/clone_test
 EXECUTABLES += $(BIN_DIR)/fcntl_test
+EXECUTABLES += $(BIN_DIR)/fork_test
 EXECUTABLES += $(BIN_DIR)/mkdirat_test
 EXECUTABLES += $(BIN_DIR)/openat_test
 EXECUTABLES += $(BIN_DIR)/read_test
@@ -60,6 +62,7 @@ EXECUTABLES += $(BIN_DIR)/write_test
 
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_clone.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_fcntl.so
+INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_fork.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_mkdirat.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_openat.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_read.so
@@ -68,10 +71,10 @@ INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_write.so
 
 all: $(BIN_DIR) $(BUILD_DIR) $(EXECUTABLES) $(INTERCEPT_LIBS)
 
-$(BUILD_DIR)/%.so: $(SRC_DIR)/%.c
+$(BUILD_DIR)/%.so: %.c
 	$(CC) -o $@ $< $(CFLAGS)
 
-$(BIN_DIR)/%: $(SRC_DIR)/%.c
+$(BIN_DIR)/%: %.c
 	$(CC) $< -o $@
 
 test: $(TESTS)
@@ -86,7 +89,8 @@ $(TESTS):
 clean:
 	rm -rf $(BIN_DIR)/
 	rm -rf $(BUILD_DIR)/
-	rm -rf wrongdir/
+	rm -rf testdir/
+	rm -f testfile.txt testfile2.txt
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
