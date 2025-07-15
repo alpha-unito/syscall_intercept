@@ -10,3 +10,6 @@ cmake-build-debug/
 test/*.so
 test/bin/
 test/build/
+test/testdir/
+test/testfile.txt
+test/testfile2.txt
