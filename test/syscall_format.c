@@ -60,7 +60,6 @@
 #undef _FORTIFY_SOURCE
 #endif
 
-#include <asm/prctl.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -116,6 +115,10 @@
 #include <time.h>
 #include <unistd.h>
 #include <utime.h>
+
+#ifdef SYS_arch_prctl
+	#include <asm/prctl.h>
+#endif
 
 #include "libsyscall_intercept_hook_point.h"
 #include "magic_syscalls.h"
@@ -619,8 +622,9 @@ main(int argc, char **argv)
 	syscall(SYS__sysctl, p0);
 
 	prctl(PR_CAPBSET_DROP, 1, 2, 3, 4);
+#ifdef SYS_arch_prctl
 	syscall(SYS_arch_prctl, ARCH_SET_FS, p0);
-
+#endif
 	adjtimex(p0);
 
 	chroot(input[0]);
