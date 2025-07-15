@@ -8,6 +8,5 @@ build/
 .idea/
 cmake-build-debug/
 test/*.so
-riscv_test/bin/
-riscv_test/build/
-riscv_test/*.txt
+test/bin/
+test/build/

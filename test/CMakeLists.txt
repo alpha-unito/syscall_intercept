@@ -170,9 +170,6 @@ add_test(NAME "clone_thread"
 set_tests_properties("clone_thread"
 	PROPERTIES PASS_REGULAR_EXPRESSION "clone_hook_child called")
 
-add_library(intercept_sys_write SHARED intercept_sys_write.c)
-target_link_libraries(intercept_sys_write PRIVATE syscall_intercept_shared)
-
 add_executable(syscall_format syscall_format.c)
 target_link_libraries(syscall_format PRIVATE syscall_intercept_shared)
 add_test(NAME "syscall_format_logging"
@@ -183,3 +180,28 @@ add_test(NAME "syscall_format_logging"
 	-DMATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/syscall_format.log.match
 	-DTEST_NAME=syscall_format_logging
 	${CHECK_LOG_COMMON_ARGS})
+
+set(GENERIC_TESTS
+	clone
+	fcntl
+	mkdirat
+	openat
+	read
+	statx
+	write
+)
+
+foreach(test_name IN LISTS GENERIC_TESTS)
+	add_library(intercept_sys_${test_name} SHARED intercept_sys_${test_name}.c)
+	target_link_libraries(intercept_sys_${test_name} PRIVATE syscall_intercept_shared)
+
+	add_executable(${test_name}_test ${test_name}_test.c)
+	target_link_libraries(${test_name}_test PRIVATE syscall_intercept_shared)
+
+	add_test(NAME "${test_name}_generic"
+		COMMAND ${CMAKE_COMMAND} -E env
+			LD_LIBRARY_PATH=$<TARGET_FILE_DIR:intercept_sys_${test_name}>:$<TARGET_FILE_DIR:syscall_intercept_shared>
+			LD_PRELOAD=$<TARGET_FILE:intercept_sys_${test_name}>
+			$<TARGET_FILE:${test_name}_test>
+	)
+endforeach()

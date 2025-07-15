@@ -29,30 +29,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
-#include "libsyscall_intercept_hook_point.h"
-#include <syscall.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/syscall.h>
+#include <sys/stat.h>
+#include <linux/stat.h>
 #include <fcntl.h>
+#include <assert.h>
 
-static int
-hook(long syscall_number,
-     long arg0, long arg1,
-     long arg2, long arg3,
-     long arg4, long arg5,
-     long *result)
-{
-    if (syscall_number == SYS_fcntl) {
-        int fd = openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-        int ret = syscall_no_intercept(syscall_number, fd, arg1, arg2, arg3, arg4, arg5);
-        *result = ret;
-        return 0;
-    }
-    return 1;
-}
+int main() {
+    openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    struct statx stx;
+    statx(AT_FDCWD, "testfile.txt", 0, STATX_BASIC_STATS | STATX_BTIME, &stx);
 
-static __attribute__((constructor)) void
-init(void)
-{
-    intercept_hook_point = hook;
+    openat(AT_FDCWD, "testfile2.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    struct statx stx2;
+    statx(AT_FDCWD, "testfile2.txt", 0, STATX_BASIC_STATS | STATX_BTIME, &stx2);
+
+    assert(stx.stx_ino ==  stx2.stx_ino);
+    write(1, "STATX TEST - OK\n", 16);
+
+    return 0;
 }

@@ -60,16 +60,8 @@ There is an install target. For now, all it does, is cp.
 make install
 ```
 
-Testing on **x86_64**:
+Running test suite:
 ```shell
-make test
-```
-
-Testing on **RISC-V**:
-```shell
-# From the project root directory
-cd riscv_test/
-make
 make test
 ```
 

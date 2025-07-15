@@ -1,5 +1,5 @@
 /*
-* Copyright 2025, University of Turin
+ * Copyright 2025, University of Turin
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,11 +30,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * see openat_test.c for details about this test library, which must be compiled with
+ * gcc -o intercept_sys_openat.so intercept_sys_write.c -I../include -L../build -lsyscall_intercept -fpic -shared
+ */
+
 #include "libsyscall_intercept_hook_point.h"
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/syscall.h>
+#include <syscall.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdint.h>
+
 
 static int hook(long syscall_number,
                 long arg0, long arg1,
@@ -42,28 +48,23 @@ static int hook(long syscall_number,
                 long arg4, long arg5,
                 long *result)
 {
-    if (syscall_number == SYS_clone) {
-        printf("Fork intercepted - Flags: 0x%lx - PID: %d\n", arg0, getpid());
+    (void) arg2;
+
+    if (syscall_number == SYS_openat) {
+        const char non_existing[] = "non_existing.txt";
+        const char *tmp = non_existing;
+        if (strcmp((char *)arg1, tmp) == 0) {
+            const char testfile[] = "testfile.txt";
+            long flags = O_WRONLY;
+            *result = syscall_no_intercept(SYS_openat, arg0, (uintptr_t)testfile,
+                                           flags, arg3, arg4, arg5);
+            return 0;
+        }
     }
     return 1;
 }
 
-static void hook_clone_parent(long child_pid)
-{
-    int fd = openat(AT_FDCWD, "testfile2.txt", O_WRONLY);
-    dprintf(fd, "%d\n", getpid());
-}
-
-static void hook_clone_child(void)
-{
-    int fd = openat(AT_FDCWD, "testfile.txt", O_WRONLY);
-    dprintf(fd, "%d\n", getpid());
-}
-
-static __attribute__((constructor)) void
-init(void)
+static __attribute__((constructor)) void init(void)
 {
     intercept_hook_point = hook;
-    intercept_hook_point_clone_child = hook_clone_child;
-    intercept_hook_point_clone_parent = hook_clone_parent;
 }

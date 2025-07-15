@@ -29,48 +29,51 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
+#include <sched.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <sys/wait.h>
-#include <stdlib.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdlib.h>
 
-int main() {
-
-    int fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
-    int fd2 = openat(AT_FDCWD, "testfile2.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
-
-    pid_t pid = fork();
-    int n, n2;
+int child_func(void *arg) {
+    pid_t ppid = *(pid_t *)arg;
+    int fd = openat(AT_FDCWD, "testfile.txt", O_RDONLY);
     char buf[128];
-    char buf2[128];
-
-    switch(pid) {
-        case -1:
-            perror("fork failed\n");
-            break;
-        case 0:
-            n = read(fd, buf, sizeof(buf));
-            buf[n] = '\0';
-            n = atoi(buf);
-            assert(n == getpid());
-            exit(EXIT_SUCCESS);
-            break;
-        default:
-            n2 = read(fd2, buf2, sizeof(buf2));
-            buf2[n2] = '\0';
-            n2 = atoi(buf2);
-            assert(n2 == getpid());
-            int status;
-    	    wait(&status);
-    	    if (WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT) {
-            	fprintf(stderr, "Child assertion failed\n");
-            	return 1;
-    	    }
-
-	    break;
-    }
+    int n = read(fd, buf, sizeof(buf));
+    buf[n] = '\0';
+    n = atoi(buf);
+    assert(n == ppid);
     return 0;
 }
+
+int main() {
+    char child_stack[8192];
+    pid_t ppid = getpid();
+    pid_t pid = clone(child_func, child_stack + sizeof(child_stack),
+                      CLONE_VM | SIGCHLD, &ppid);
+
+    if (pid == -1) {
+        perror("Clone failed");
+        return 1;
+    }
+
+    int status;
+    wait(&status);
+    if (WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT) {
+        fprintf(stderr, "Child assertion failed\n");
+        return 1;
+    }
+
+    write(1, "CLONE TEST - OK\n", 16);
+    return 0;
+}
+
+

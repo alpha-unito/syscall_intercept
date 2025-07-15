@@ -31,22 +31,28 @@
  */
 
 #include "libsyscall_intercept_hook_point.h"
-#include <syscall.h>
+#include <stdio.h>
 #include <unistd.h>
+#include <sys/syscall.h>
 #include <fcntl.h>
 
-static int
-hook(long syscall_number,
-     long arg0, long arg1,
-     long arg2, long arg3,
-     long arg4, long arg5,
-     long *result)
+static int hook(long syscall_number,
+                long arg0, long arg1,
+                long arg2, long arg3,
+                long arg4, long arg5,
+                long *result)
 {
-    if (syscall_number == SYS_fcntl) {
-        int fd = openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-        int ret = syscall_no_intercept(syscall_number, fd, arg1, arg2, arg3, arg4, arg5);
-        *result = ret;
-        return 0;
+    (void) arg0;
+    (void) arg1;
+    (void) arg2;
+    (void) arg3;
+    (void) arg4;
+    (void) arg5;
+    (void) result;
+
+    if (syscall_number == SYS_clone) {
+        int fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
+        dprintf(fd,"%d\n",getpid());
     }
     return 1;
 }

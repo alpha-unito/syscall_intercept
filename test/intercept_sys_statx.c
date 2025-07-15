@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Intel Corporation
+ * Copyright 2025, University of Turin
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,52 +32,32 @@
 
 #include "libsyscall_intercept_hook_point.h"
 
-#include <stddef.h>
 #include <syscall.h>
+#include <unistd.h>
 #include <string.h>
 
-static int
-hook(long syscall_number,
-	long arg0, long arg1,
-	long arg2, long arg3,
-	long arg4, long arg5,
-	long *result)
+
+static int hook(long syscall_number,
+                long arg0, long arg1,
+                long arg2, long arg3,
+                long arg4, long arg5,
+                long *result)
 {
-	(void) arg0;
-	(void) arg2;
-	(void) arg3;
-	(void) arg4;
-	(void) arg5;
-	(void) result;
+    (void) result;
 
-	if (syscall_number == SYS_write) {
-		const char test[] = "WRITE TEST - OK\n";
-		const char *tmp = test;
-        if (strcmp((char *)arg1, tmp) == 0) return 1;
-
-		const char interc[] = "intercepted_";
-		const char *src = interc;
-
-		/* write(fd, buf, len) */
-		size_t len = (size_t)arg2;
-		char *buf = (char *)arg1;
-
-#ifdef EXPECT_SPURIOUS_SYSCALLS
-		if (strcmp(buf, "original_syscall") != 0)
-			return 1;
-#endif
-
-		if (len > sizeof(interc)) {
-			while (*src != '\0')
-				*buf++ = *src++;
-		}
-	}
-
-	return 1;
+    if (syscall_number == SYS_statx) {
+        const char file2[] = "testfile2.txt";
+        const char *tmp = file2;
+        if (strcmp((char *)arg1, tmp) == 0) {
+            const char testfile[] = "testfile.txt";
+            syscall_no_intercept(syscall_number, arg0, testfile, arg2, arg3, arg4, arg5, result);
+            return 0;
+        }
+    }
+    return 1;
 }
 
-static __attribute__((constructor)) void
-init(void)
+static __attribute__((constructor)) void init(void)
 {
-	intercept_hook_point = hook;
+    intercept_hook_point = hook;
 }
