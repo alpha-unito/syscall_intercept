@@ -173,19 +173,6 @@ set_tests_properties("clone_thread"
 add_library(intercept_sys_write SHARED intercept_sys_write.c)
 target_link_libraries(intercept_sys_write PRIVATE syscall_intercept_shared)
 
-add_executable(vfork_logging vfork_logging.c)
-add_test(NAME "vfork_logging"
-	COMMAND ${CMAKE_COMMAND}
-	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
-	-DTEST_PROG=$<TARGET_FILE:vfork_logging>
-	-DLIB_FILE=$<TARGET_FILE:syscall_intercept_shared>
-	-DMATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/libcintercept2.log.match
-	-DTEST_NAME=vfork_logging
-	${CHECK_LOG_COMMON_ARGS})
-set_tests_properties("vfork_logging"
-	PROPERTIES PASS_REGULAR_EXPRESSION "in_child_created_using_vfork")
-
-
 add_executable(syscall_format syscall_format.c)
 target_link_libraries(syscall_format PRIVATE syscall_intercept_shared)
 add_test(NAME "syscall_format_logging"

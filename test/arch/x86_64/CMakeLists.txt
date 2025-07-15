@@ -32,6 +32,11 @@
 
 # See: https://cmake.org/Wiki/CMake/Testing_With_CTest
 
+set(CHECK_LOG_COMMON_ARGS_VFORK
+        -DMATCH_SCRIPT=${PROJECT_SOURCE_DIR}/utils/match.pl
+        -DEXPECT_SPURIOUS_SYSCALLS=${EXPECT_SPURIOUS_SYSCALLS}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/check_log.cmake)
+
 set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
 
 add_executable(asm_pattern asm_pattern.c
@@ -182,3 +187,15 @@ add_test(NAME "prog_no_pie_intercept_all"
         -P ${CMAKE_CURRENT_SOURCE_DIR}/check.cmake)
 set_tests_properties("prog_no_pie_intercept_all"
         PROPERTIES PASS_REGULAR_EXPRESSION "intercepted_call")
+
+add_executable(vfork_logging vfork_logging.c)
+add_test(NAME "vfork_logging"
+        COMMAND ${CMAKE_COMMAND}
+        -DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
+        -DTEST_PROG=$<TARGET_FILE:vfork_logging>
+        -DLIB_FILE=$<TARGET_FILE:syscall_intercept_shared>
+        -DMATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/libcintercept2.log.match
+        -DTEST_NAME=vfork_logging
+        ${CHECK_LOG_COMMON_ARGS_VFORK})
+set_tests_properties("vfork_logging"
+        PROPERTIES PASS_REGULAR_EXPRESSION "in_child_created_using_vfork")
