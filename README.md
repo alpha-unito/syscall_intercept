@@ -18,9 +18,7 @@ Full-featured support for **aarch64** (ARM64) is in progress.
 
  * libcapstone -- the disassembly engine used under the hood
    (RISC-V support requires version **5.0** or higher, while apt installs version 4.0.2 by default, as february 2025).
-   Since a manual installation of capstone could not be automatically detected while compiling syscall_intercept, we made
-   sure that libcapstone 5.0.6 is **automatically compiled** from source during the syscall_intercept cmake execution.
-   In other words, you don't need to care about having and installing capstone at all on your system.
+   Since a manual installation of Capstone could not be automatically detected while compiling syscall_intercept, we ensured that libcapstone v5.0.6 is **automatically compiled** from source during the syscall_intercept cmake execution.
 
 ## Build dependencies ##
 
