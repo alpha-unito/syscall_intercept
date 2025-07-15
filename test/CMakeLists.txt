@@ -40,6 +40,7 @@ find_package(Threads)
 include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test)
 
 add_compile_options(-Wno-unused-result)
+add_compile_options(-Wno-unused-variable)
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
 	add_subdirectory(arch/x86_64)
