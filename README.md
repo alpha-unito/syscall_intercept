@@ -8,7 +8,7 @@
 [//]: # ([![Coverity Scan Build Status]&#40;https://scan.coverity.com/projects/12890/badge.svg&#41;]&#40;https://scan.coverity.com/projects/syscall_intercept&#41;)
 
 This repository contains a multi-architecture porting of [syscall_intercept](https://github.com/pmem/syscall_intercept) working on both **x86_64** and **RISC-V**.
-Full-featured support for **aarch64** (ARM64) is **work in progress**.
+Full-featured support for **aarch64** (ARM64) is in progress.
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 # Dependencies #
