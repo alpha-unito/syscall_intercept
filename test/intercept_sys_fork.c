@@ -1,5 +1,5 @@
 /*
- * Copyright 2025, University of Turin
+* Copyright 2025, University of Turin
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,24 +30,48 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <fcntl.h>
+#include "libsyscall_intercept_hook_point.h"
+#include <stdio.h>
 #include <unistd.h>
-#include <string.h>
-#include <assert.h>
+#include <sys/syscall.h>
+#include <fcntl.h>
 
-int main() {
-    int fd = openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-    int fd2 = openat(AT_FDCWD, "testfile2.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-    int fd2_dup = fcntl(fd2, F_DUPFD, 0);
-    char buf[128] = "writing to fd2_dup\n";
-	write(fd2_dup, buf, strlen(buf));
-    char dst_buf[128];
-    int n = read(fd, dst_buf, sizeof(buf));
-    dst_buf[n] = '\0';
-    assert(strcmp(buf, dst_buf) == 0);
-    write(1, "FCNTL TEST - OK\n",16);
-	close(fd);
-	close(fd2);
-	close(fd2_dup);
-	return 0;
+static int hook(long syscall_number,
+                long arg0, long arg1,
+                long arg2, long arg3,
+                long arg4, long arg5,
+                long *result)
+{
+    (void) arg1;
+    (void) arg2;
+    (void) arg3;
+    (void) arg4;
+    (void) arg5;
+    (void) result;
+
+    if (syscall_number == SYS_clone) {
+        printf("Fork intercepted - Flags: 0x%lx - PID: %d\n", arg0, getpid());
+    }
+    return 1;
+}
+
+static void hook_clone_parent(long child_pid)
+{
+    (void) child_pid;
+    int fd = openat(AT_FDCWD, "testfile2.txt", O_WRONLY);
+    dprintf(fd, "%d\n", getpid());
+}
+
+static void hook_clone_child(void)
+{
+    int fd = openat(AT_FDCWD, "testfile.txt", O_WRONLY);
+    dprintf(fd, "%d\n", getpid());
+}
+
+static __attribute__((constructor)) void
+init(void)
+{
+    intercept_hook_point = hook;
+    intercept_hook_point_clone_child = hook_clone_child;
+    intercept_hook_point_clone_parent = hook_clone_parent;
 }

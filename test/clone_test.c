@@ -51,7 +51,6 @@ int child_func(void *arg) {
     buf[n] = '\0';
     n = atoi(buf);
     assert(n == ppid);
-    (void) ppid;
     return 0;
 }
 
@@ -73,8 +72,7 @@ int main() {
         return 1;
     }
 
-    int res = write(1, "CLONE TEST - OK\n", 16);
-    (void) res;
+    write(1, "CLONE TEST - OK\n", 16);
     return 0;
 }
 
