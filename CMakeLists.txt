@@ -43,11 +43,10 @@ endif()
 
 option(PERFORM_STYLE_CHECKS
 	"check coding style, license headers (requires perl)" OFF)
+option(BUILD_TESTS "build and enable tests" ON)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
-	option(BUILD_TESTS "build and enable tests" ON)
 	option(BUILD_EXAMPLES "build examples" ON)
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv(32|64))$")
-	option(BUILD_TESTS "build and enable tests" OFF)
 	option(BUILD_EXAMPLES "build examples" OFF)
 endif()
 option(TREAT_WARNINGS_AS_ERRORS
