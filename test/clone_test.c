@@ -51,6 +51,7 @@ int child_func(void *arg) {
     buf[n] = '\0';
     n = atoi(buf);
     assert(n == ppid);
+    (void) ppid;
     return 0;
 }
 
@@ -58,7 +59,7 @@ int main() {
     char child_stack[8192];
     pid_t ppid = getpid();
     pid_t pid = clone(child_func, child_stack + sizeof(child_stack),
-                      CLONE_VM | SIGCHLD, &ppid);
+                        SIGCHLD, &ppid);
 
     if (pid == -1) {
         perror("Clone failed");
@@ -72,7 +73,8 @@ int main() {
         return 1;
     }
 
-    write(1, "CLONE TEST - OK\n", 16);
+    int res = write(1, "CLONE TEST - OK\n", 16);
+    (void) res;
     return 0;
 }
 
