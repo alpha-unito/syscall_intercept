@@ -381,7 +381,7 @@ static const struct syscall_format formats[] = {
 	SARGS(symlinkat, rdec, arg_cstr, arg_atfd, arg_cstr),
 	SARGS(readlinkat, rdec, arg_atfd, arg_cstr, arg_buf_out, arg_dec),
 	SARGS(fchmodat, rdec, arg_atfd, arg_cstr, arg_oct_mode),
-	SARGS(faccessat, rdec, arg_atfd, arg_cstr, arg_oct_mode),
+	SARGS(faccessat, rdec, arg_atfd, arg_cstr, arg_access_mode),
 	SARGS(pselect6, rdec, arg_, arg_, arg_, arg_, arg_, arg_),
 	SARGS(ppoll, rdec, arg_pointer, arg_dec, arg_, arg_, arg_dec),
 	SARGS(unshare, rdec, arg_),
