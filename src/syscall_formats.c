@@ -56,7 +56,7 @@ static const struct syscall_format formats[] = {
 	SARGS(lstat, rdec, arg_cstr, arg_pointer),
 #endif
 #ifdef SYS_poll
-	SARGS(poll, rdec, arg_pointer, arg_, arg_),
+	SARGS(poll, rdec, arg_pointer, arg_dec, arg_dec),
 #endif
 	SARGS(lseek, rdec, arg_fd, arg_dec, arg_seek_whence),
 	SARGS(mmap, rpointer, arg_pointer, arg_, arg_, arg_, arg_fd, arg_),
@@ -118,7 +118,7 @@ static const struct syscall_format formats[] = {
 	SARGS(socketpair, rdec, arg_, arg_, arg_, arg_),
 	SARGS(setsockopt, rdec, arg_fd, arg_, arg_, arg_, arg_),
 	SARGS(getsockopt, rdec, arg_fd, arg_, arg_, arg_, arg_),
-	SARGS(clone, rdec, arg_clone_flags, arg_pointer, arg_pointer, arg_pointer, arg_),
+	SARGS(clone, rdec, arg_clone_flags, arg_pointer, arg_pointer, arg_, arg_),
 #ifdef SYS_fork
 	SARGS(fork, rdec, arg_none),
 #endif
@@ -383,7 +383,7 @@ static const struct syscall_format formats[] = {
 	SARGS(fchmodat, rdec, arg_atfd, arg_cstr, arg_oct_mode),
 	SARGS(faccessat, rdec, arg_atfd, arg_cstr, arg_oct_mode),
 	SARGS(pselect6, rdec, arg_, arg_, arg_, arg_, arg_, arg_),
-	SARGS(ppoll, rdec, arg_, arg_, arg_, arg_, arg_),
+	SARGS(ppoll, rdec, arg_pointer, arg_dec, arg_, arg_, arg_dec),
 	SARGS(unshare, rdec, arg_),
 	SARGS(set_robust_list, rdec, arg_, arg_dec),
 	SARGS(get_robust_list, rdec, arg_, arg_, arg_),
