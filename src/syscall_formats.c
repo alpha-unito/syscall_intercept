@@ -200,6 +200,7 @@ static const struct syscall_format formats[] = {
 	SARGS(geteuid, rdec, arg_none),
 	SARGS(getegid, rdec, arg_none),
 	SARGS(setpgid, rdec, arg_none),
+	SARGS(getppid, rdec, arg_none),
 #ifdef SYS_getpgrp
 	SARGS(getpgrp, rdec, arg_none),
 #endif
@@ -285,6 +286,10 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_ioperm
 	SARGS(ioperm, rdec, arg_, arg_, arg_),
 #endif
+	SARGS(create_module, rpointer, arg_pointer, arg_dec),
+	SARGS(init_module, rdec, arg_pointer, arg_dec, arg_pointer),
+	SARGS(delete_module, rdec, arg_cstr, arg_),
+	SARGS(quotactl, rdec, arg_dec, arg_pointer, arg_dec, arg_pointer),
 	SARGS(gettid, rdec, arg_none),
 	SARGS(readahead, rdec, arg_fd, arg_dec, arg_dec),
 	SARGS(setxattr, rdec, arg_cstr, arg_cstr, arg_buf_in, arg_dec, arg_),
