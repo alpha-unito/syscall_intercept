@@ -173,6 +173,12 @@ add_test(NAME "clone_thread"
 set_tests_properties("clone_thread"
 	PROPERTIES PASS_REGULAR_EXPRESSION "clone_hook_child called")
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
+	set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/x86_64/syscall_format.log.match)
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv(32|64))$")
+	set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/riscv/syscall_format.log.match)
+endif()
+
 add_executable(syscall_format syscall_format.c)
 target_link_libraries(syscall_format PRIVATE syscall_intercept_shared)
 add_test(NAME "syscall_format_logging"
@@ -180,7 +186,7 @@ add_test(NAME "syscall_format_logging"
 	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
 	-DTEST_PROG=$<TARGET_FILE:syscall_format>
 	-DLIB_FILE=
-	-DMATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/syscall_format.log.match
+	-DMATCH_FILE=${MATCH_FILE}
 	-DTEST_NAME=syscall_format_logging
 	${CHECK_LOG_COMMON_ARGS})
 
