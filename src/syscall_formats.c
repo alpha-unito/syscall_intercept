@@ -286,7 +286,9 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_ioperm
 	SARGS(ioperm, rdec, arg_, arg_, arg_),
 #endif
+#ifdef SYS_create_module
 	SARGS(create_module, rpointer, arg_pointer, arg_dec),
+#endif
 	SARGS(init_module, rdec, arg_pointer, arg_dec, arg_pointer),
 	SARGS(delete_module, rdec, arg_cstr, arg_),
 	SARGS(quotactl, rdec, arg_dec, arg_pointer, arg_dec, arg_pointer),
