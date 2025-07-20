@@ -379,7 +379,7 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_futimesat
 	SARGS(futimesat, rdec, arg_atfd, arg_cstr, arg_),
 #endif
-	SARGS(newfstatat, rdec, arg_atfd, arg_cstr, arg_, arg_),
+	SARGS(newfstatat, rdec, arg_atfd, arg_cstr, arg_pointer, arg_),
 	SARGS(unlinkat, rdec, arg_atfd, arg_cstr, arg_),
 #ifdef SYS_renameat
 	SARGS(renameat, rdec, arg_atfd, arg_cstr, arg_atfd, arg_cstr),
