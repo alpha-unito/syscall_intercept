@@ -30,29 +30,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "libsyscall_intercept_hook_point.h"
-#include <syscall.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <assert.h>
 
-static int
-hook(long syscall_number,
-     long arg0, long arg1,
-     long arg2, long arg3,
-     long arg4, long arg5,
-     long *result)
-{
-    if (syscall_number == SYS_fcntl) {
-        int fd = openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-        int ret = syscall_no_intercept(syscall_number, fd, arg1, arg2, arg3, arg4, arg5);
-        *result = ret;
-        return 0;
-    }
-    return 1;
-}
-
-static __attribute__((constructor)) void
-init(void)
-{
-    intercept_hook_point = hook;
+int main() {
+    int fd = openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    int fd2 = openat(AT_FDCWD, "testfile2.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    int fd2_dup = fcntl(fd2, F_DUPFD, 0);
+    char buf[128] = "writing to fd2_dup\n";
+	write(fd2_dup, buf, strlen(buf));
+    char dst_buf[128];
+    int n = read(fd, dst_buf, sizeof(buf));
+    dst_buf[n] = '\0';
+    assert(strcmp(buf, dst_buf) == 0);
+    write(1, "FCNTL TEST - OK\n",16);
+	close(fd);
+	close(fd2);
+	close(fd2_dup);
+	return 0;
 }

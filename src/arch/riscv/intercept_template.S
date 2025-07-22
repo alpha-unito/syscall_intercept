@@ -57,6 +57,24 @@ intercept_asm_wrapper_tmpl:
     sd t3, 48(sp)
     sd t4, 56(sp)
     sd t5, 64(sp)
+    /*
+     * t5 content will be evaluated in intercept_wrapper to determine which
+     * interception routine must be called. 1 for post_clone, 0 otherwise
+     */
+    li t5, 0 # choose intercept_routine
+    j intercept_asm_wrapper_patch_desc_addr
+post_clone:
+    addi sp, sp, -72
+    addi t6, sp, 72 # sp+72 is the sp value before interception
+    sd t6, 0(sp)
+    sd ra, 16(sp)
+    sd t0, 24(sp)
+    sd t1, 32(sp)
+    sd t2, 40(sp)
+    sd t3, 48(sp)
+    sd t4, 56(sp)
+    sd t5, 64(sp)
+    li t5, 1 # choose intercept_routine_post_clone
 intercept_asm_wrapper_patch_desc_addr:
     /* load patch_desc address in t0 */
 
@@ -135,11 +153,18 @@ intercept_asm_wrapper_wrapper_level1_addr:
      * If t6 is zero, a0 contains a syscall number, and that syscall
      * is executed here.
      * If t6 is 1, a0 contains the return value of the hooked syscall.
+     * If t6 is 2, a clone syscall is executed here.
      */
     beqz t6, execute_unhandled_ecall
     srli t6, t6, 1
     beqz t6, handled_ecall
-    ebreak # if t6 holds invalid value, i. e. different from 0 or 1
+    srli t6, t6, 1
+    beqz t6, execute_clone
+    ebreak # if t6 holds invalid value, i. e. different from 0, 1 or 2
+
+execute_clone:
+    ecall
+    j post_clone
 
 execute_unhandled_ecall:
     ecall

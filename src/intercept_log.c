@@ -46,6 +46,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 /*
@@ -274,6 +275,7 @@ static const struct flag_desc clone_flags[] = {
 	FLAG_ENTRY(CLONE_UNTRACED),
 	FLAG_ENTRY(CLONE_VFORK),
 	FLAG_ENTRY(CLONE_VM),
+	FLAG_ENTRY(SIGCHLD),
 	{ .flag = 0, }
 };
 

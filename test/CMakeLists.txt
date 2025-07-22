@@ -39,86 +39,12 @@ find_package(Threads)
 
 include_directories(${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/test)
 
-set(CMAKE_ASM_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
+add_compile_options(-Wno-unused-result)
+add_compile_options(-Wno-unused-variable)
 
-add_executable(asm_pattern asm_pattern.c
-		$<TARGET_OBJECTS:syscall_intercept_base_c>
-		$<TARGET_OBJECTS:syscall_intercept_base_asm>)
-
-target_link_libraries(asm_pattern
-	PRIVATE ${CMAKE_DL_LIBS} ${capstone_LDFLAGS})
-
-set(asm_patterns
-	nosyscall
-	pattern1
-	pattern2
-	pattern3
-	pattern4
-	pattern_loop
-	pattern_loop2
-	pattern_symbol_boundary0
-	pattern_symbol_boundary1
-	pattern_symbol_boundary2
-	pattern_symbol_boundary3
-	pattern_nop_padding0
-	pattern_nop_padding1
-	pattern_nop_padding2
-	pattern_nop_padding3
-	pattern_nop_padding4
-	pattern_nop_padding5
-	pattern_nop_padding6
-	pattern_nop_padding7
-	pattern_nop_padding8
-	pattern_nop_padding9
-	pattern_lea_rip_rdi
-	pattern_lea_rip_r12)
-
-try_compile(ASSEMBLER_SUPPORTS_ENDBR64 ${CMAKE_BINARY_DIR}
-		${CMAKE_CURRENT_SOURCE_DIR}/pattern_endbr64.in.S
-		CMAKE_FLAGS "-DCMAKE_ASM_LINK_EXECUTABLE='echo skip linking'")
-if(ASSEMBLER_SUPPORTS_ENDBR64)
-	list(APPEND asm_patterns pattern_endbr64)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
+	add_subdirectory(arch/x86_64)
 endif()
-
-set(asm_patterns_failing
-	pattern_double_syscall
-	pattern_rets
-	pattern_jmps)
-
-macro(add_asm_test test_name failing)
-	add_library(${test_name}.in SHARED ${test_name}.in.S)
-	add_library(${test_name}.out SHARED ${test_name}.out.S)
-	if(LINKER_HAS_NOSTDLIB)
-		set_target_properties(${test_name}.in
-			PROPERTIES LINK_FLAGS "-nostdlib")
-		set_target_properties(${test_name}.out
-			PROPERTIES LINK_FLAGS "-nostdlib")
-	endif()
-	if(HAS_NOUNUSEDARG)
-		target_compile_options(${test_name}.in BEFORE
-			PRIVATE "-Wno-unused-command-line-argument")
-		target_compile_options(${test_name}.out BEFORE
-			PRIVATE "-Wno-unused-command-line-argument")
-
-	endif()
-	add_test(NAME "asm_pattern_${test_name}"
-		COMMAND $<TARGET_FILE:asm_pattern>
-		$<TARGET_FILE:${test_name}.in>
-		$<TARGET_FILE:${test_name}.out>)
-	if(${failing})
-		set_tests_properties("asm_pattern_${test_name}"
-			PROPERTIES WILL_FAIL ON
-			PASS_REGULAR_EXPRESSION "Invalid patch")
-	endif()
-endmacro()
-
-foreach(name ${asm_patterns})
-	add_asm_test(${name} FALSE)
-endforeach()
-
-foreach(name ${asm_patterns_failing})
-	add_asm_test(${name} TRUE)
-endforeach()
 
 set(CHECK_LOG_COMMON_ARGS
 	-DMATCH_SCRIPT=${PROJECT_SOURCE_DIR}/utils/match.pl
@@ -141,6 +67,7 @@ add_test(NAME "fork_logging"
 add_library(hook_test_preload_o OBJECT hook_test_preload.c)
 
 add_executable(hook_test hook_test.c)
+target_link_libraries(hook_test PUBLIC ${CAPSTONE_LIB_FOLDER}/libcapstone.so)
 
 add_library(hook_test_preload_with_shared SHARED
 	$<TARGET_OBJECTS:hook_test_preload_o>)
@@ -157,7 +84,7 @@ add_test(NAME "hook_with_shared"
 
 add_library(hook_test_preload_with_static SHARED
 	$<TARGET_OBJECTS:hook_test_preload_o>)
-target_link_libraries(hook_test_preload_with_static PRIVATE syscall_intercept_static)
+target_link_libraries(hook_test_preload_with_static PRIVATE syscall_intercept_static ${CAPSTONE_LIB_FOLDER}/libcapstone.so)
 add_test(NAME "hook_with_static"
 	COMMAND ${CMAKE_COMMAND}
 	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
@@ -246,90 +173,11 @@ add_test(NAME "clone_thread"
 set_tests_properties("clone_thread"
 	PROPERTIES PASS_REGULAR_EXPRESSION "clone_hook_child called")
 
-add_library(intercept_sys_write SHARED intercept_sys_write.c)
-target_link_libraries(intercept_sys_write PRIVATE syscall_intercept_shared)
-
-add_executable(executable_with_syscall_pie executable_with_syscall.S)
-if(HAS_NOUNUSEDARG)
-	target_compile_options(executable_with_syscall_pie BEFORE
-		PRIVATE "-Wno-unused-command-line-argument")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
+	set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/x86_64/syscall_format.log.match)
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv(32|64))$")
+	set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/riscv/syscall_format.log.match)
 endif()
-set_target_properties(executable_with_syscall_pie
-			PROPERTIES POSITION_INDEPENDENT_CODE True)
-if(HAS_ARG_PIE)
-	target_compile_options(executable_with_syscall_pie PRIVATE "-pie")
-	target_link_libraries(executable_with_syscall_pie PRIVATE "-pie")
-endif()
-
-add_executable(executable_with_syscall_no_pie executable_with_syscall.S)
-if(HAS_NOUNUSEDARG)
-	target_compile_options(executable_with_syscall_no_pie BEFORE
-		PRIVATE "-Wno-unused-command-line-argument")
-endif()
-set_target_properties(executable_with_syscall_no_pie
-			PROPERTIES POSITION_INDEPENDENT_CODE False)
-if(HAS_ARG_NOPIE)
-	target_compile_options(executable_with_syscall_no_pie PRIVATE "-nopie")
-	target_link_libraries(executable_with_syscall_no_pie PRIVATE "-nopie")
-elseif(HAS_ARG_NO_PIE)
-	target_compile_options(executable_with_syscall_no_pie PRIVATE "-no-pie")
-	target_link_libraries(executable_with_syscall_no_pie PRIVATE "-no-pie")
-endif()
-
-add_test(NAME "prog_pie_intercept_libc_only"
-	COMMAND ${CMAKE_COMMAND}
-	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
-	-DTEST_PROG=$<TARGET_FILE:executable_with_syscall_pie>
-	-DLIB_FILE=$<TARGET_FILE:intercept_sys_write>
-	-DTEST_PROG_ARGS=original_syscall
-	-P ${CMAKE_CURRENT_SOURCE_DIR}/check.cmake)
-set_tests_properties("prog_pie_intercept_libc_only"
-	PROPERTIES PASS_REGULAR_EXPRESSION "original_syscall")
-
-add_test(NAME "prog_no_pie_intercept_libc_only"
-	COMMAND ${CMAKE_COMMAND}
-	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
-	-DTEST_PROG=$<TARGET_FILE:executable_with_syscall_no_pie>
-	-DLIB_FILE=$<TARGET_FILE:intercept_sys_write>
-	-DTEST_PROG_ARGS=original_syscall
-	-P ${CMAKE_CURRENT_SOURCE_DIR}/check.cmake)
-set_tests_properties("prog_no_pie_intercept_libc_only"
-	PROPERTIES PASS_REGULAR_EXPRESSION "original_syscall")
-
-add_test(NAME "prog_pie_intercept_all"
-	COMMAND ${CMAKE_COMMAND}
-	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
-	-DINTERCEPT_ALL=1
-	-DTEST_PROG=$<TARGET_FILE:executable_with_syscall_pie>
-	-DLIB_FILE=$<TARGET_FILE:intercept_sys_write>
-	-DTEST_PROG_ARGS=original_syscall
-	-P ${CMAKE_CURRENT_SOURCE_DIR}/check.cmake)
-set_tests_properties("prog_pie_intercept_all"
-	PROPERTIES PASS_REGULAR_EXPRESSION "intercepted_call")
-
-add_test(NAME "prog_no_pie_intercept_all"
-	COMMAND ${CMAKE_COMMAND}
-	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
-	-DINTERCEPT_ALL=1
-	-DTEST_PROG=$<TARGET_FILE:executable_with_syscall_no_pie>
-	-DLIB_FILE=$<TARGET_FILE:intercept_sys_write>
-	-DTEST_PROG_ARGS=original_syscall
-	-P ${CMAKE_CURRENT_SOURCE_DIR}/check.cmake)
-set_tests_properties("prog_no_pie_intercept_all"
-	PROPERTIES PASS_REGULAR_EXPRESSION "intercepted_call")
-
-add_executable(vfork_logging vfork_logging.c)
-add_test(NAME "vfork_logging"
-	COMMAND ${CMAKE_COMMAND}
-	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
-	-DTEST_PROG=$<TARGET_FILE:vfork_logging>
-	-DLIB_FILE=$<TARGET_FILE:syscall_intercept_shared>
-	-DMATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/libcintercept2.log.match
-	-DTEST_NAME=vfork_logging
-	${CHECK_LOG_COMMON_ARGS})
-set_tests_properties("vfork_logging"
-	PROPERTIES PASS_REGULAR_EXPRESSION "in_child_created_using_vfork")
-
 
 add_executable(syscall_format syscall_format.c)
 target_link_libraries(syscall_format PRIVATE syscall_intercept_shared)
@@ -338,6 +186,32 @@ add_test(NAME "syscall_format_logging"
 	-DTEST_EXTRA_PRELOAD=${TEST_EXTRA_PRELOAD}
 	-DTEST_PROG=$<TARGET_FILE:syscall_format>
 	-DLIB_FILE=
-	-DMATCH_FILE=${CMAKE_CURRENT_SOURCE_DIR}/syscall_format.log.match
+	-DMATCH_FILE=${MATCH_FILE}
 	-DTEST_NAME=syscall_format_logging
 	${CHECK_LOG_COMMON_ARGS})
+
+set(GENERIC_TESTS
+	clone
+	fcntl
+	fork
+	mkdirat
+	openat
+	read
+	statx
+	write
+)
+
+foreach(test_name IN LISTS GENERIC_TESTS)
+	add_library(intercept_sys_${test_name} SHARED intercept_sys_${test_name}.c)
+	target_link_libraries(intercept_sys_${test_name} PRIVATE syscall_intercept_shared)
+
+	add_executable(${test_name}_test ${test_name}_test.c)
+	target_link_libraries(${test_name}_test PRIVATE syscall_intercept_shared)
+
+	add_test(NAME "${test_name}_generic"
+		COMMAND ${CMAKE_COMMAND} -E env
+			LD_LIBRARY_PATH=$<TARGET_FILE_DIR:intercept_sys_${test_name}>:$<TARGET_FILE_DIR:syscall_intercept_shared>
+			LD_PRELOAD=$<TARGET_FILE:intercept_sys_${test_name}>
+			$<TARGET_FILE:${test_name}_test>
+	)
+endforeach()

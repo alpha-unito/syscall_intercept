@@ -622,6 +622,25 @@ get_syscall_in_context(struct context *context, struct syscall_desc *sys)
 }
 
 /*
+ * intercept_routine_post_clone
+ * The routine called by an assembly wrapper when a clone syscall returns zero,
+ * and a new stack pointer is used in the child thread.
+ */
+struct wrapper_ret
+intercept_routine_post_clone(struct context *context)
+{
+	if (THREAD_PID == 0) {
+		if (intercept_hook_point_clone_child != NULL)
+			intercept_hook_point_clone_child();
+	} else {
+		if (intercept_hook_point_clone_parent != NULL)
+			intercept_hook_point_clone_parent(THREAD_PID);
+	}
+
+	return (struct wrapper_ret){FIRST_RET_REG = THREAD_PID, SECOND_RET_REG = 1 };
+}
+
+/*
  * intercept_routine(...)
  * This is the function called from the asm wrappers,
  * forwarding the syscall parameters to a hook function
@@ -679,7 +698,7 @@ intercept_routine(struct context *context)
 #if defined(__x86_64__) || defined(_M_X64)
 	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn) {
 #elif defined(__riscv)
-	if (desc.nr == SYS_clone || desc.nr == SYS_rt_sigreturn) {
+	if (desc.nr == SYS_rt_sigreturn) {
 #endif
 		/* can't handle these syscalls the normal way */
 		return (struct wrapper_ret){FIRST_RET_REG = SYSCALL_NR, SECOND_RET_REG = 0 };
@@ -698,7 +717,7 @@ intercept_routine(struct context *context)
 		 * the clone_child_intercept_routine instead, executing
 		 * it on the new child threads stack, then returns to libc.
 		 */
-#if defined(__x86_64__) || defined(_M_X64)
+
 		if (desc.nr == SYS_clone && desc.args[1] != 0) {
 			return (struct wrapper_ret){
 				FIRST_RET_REG = SYSCALL_NR, SECOND_RET_REG = 2 };
@@ -711,7 +730,7 @@ intercept_routine(struct context *context)
 		}
 #endif
 		else
-#endif
+
 			result = syscall_no_intercept(desc.nr,
 					desc.args[0],
 					desc.args[1],
@@ -719,28 +738,23 @@ intercept_routine(struct context *context)
 					desc.args[3],
 					desc.args[4],
 					desc.args[5]);
+
+		/*
+		 * Here clone calls with arg[1] == 0 are granted the execution
+		 * of their post_clone hook functions
+		 */
+		if (desc.nr == SYS_clone) {
+			THREAD_PID = result;
+			intercept_routine_post_clone(context);
+		}
+#ifdef SYS_clone3
+		else if (desc.nr == SYS_clone3) {
+			THREAD_PID = result;
+			intercept_routine_post_clone(context);
+		}
+#endif
 	}
 
 	intercept_log_syscall(patch, &desc, KNOWN, result);
 	return (struct wrapper_ret){ FIRST_RET_REG = result, SECOND_RET_REG = 1 };
-}
-
-/*
- * intercept_routine_post_clone
- * The routine called by an assembly wrapper when a clone syscall returns zero,
- * and a new stack pointer is used in the child thread.
- */
-
-struct wrapper_ret
-intercept_routine_post_clone(struct context *context)
-{
-	if (THREAD_PID == 0) {
-		if (intercept_hook_point_clone_child != NULL)
-			intercept_hook_point_clone_child();
-	} else {
-		if (intercept_hook_point_clone_parent != NULL)
-			intercept_hook_point_clone_parent(THREAD_PID);
-	}
-
-	return (struct wrapper_ret){FIRST_RET_REG = THREAD_PID, SECOND_RET_REG = 1 };
 }

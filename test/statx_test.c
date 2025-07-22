@@ -29,36 +29,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
-#include "libsyscall_intercept_hook_point.h"
-#include <stddef.h>
-#include <syscall.h>
-#include <fcntl.h>
-#include <string.h>
 #include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/syscall.h>
+#include <sys/stat.h>
+#include <linux/stat.h>
+#include <fcntl.h>
+#include <assert.h>
 
+int main() {
+    openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    struct statx stx;
+    statx(AT_FDCWD, "testfile.txt", 0, STATX_BASIC_STATS | STATX_BTIME, &stx);
 
-static int hook(long syscall_number,
-                long arg0, long arg1,
-                long arg2, long arg3,
-                long arg4, long arg5,
-                long *result)
-{
-    (void)arg3;
-    (void)arg4;
-    (void)arg5;
-    (void)result;
+    openat(AT_FDCWD, "testfile2.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    struct statx stx2;
+    statx(AT_FDCWD, "testfile2.txt", 0, STATX_BASIC_STATS | STATX_BTIME, &stx2);
 
-    if (syscall_number == SYS_read) {
-        int fd = openat(AT_FDCWD, "testfile.txt", O_WRONLY);
-        char buf[128] = "write from read hook\n";
-        write(fd, buf, strlen(buf));
-        lseek(fd, 0, SEEK_SET);
-    }
-    return 1;
-}
+    assert(stx.stx_ino ==  stx2.stx_ino);
+    write(1, "STATX TEST - OK\n", 16);
 
-static __attribute__((constructor)) void init(void)
-{
-    intercept_hook_point = hook;
+    return 0;
 }

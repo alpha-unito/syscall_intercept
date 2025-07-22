@@ -30,7 +30,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.10)
 project(syscall_intercept C ASM)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
@@ -43,11 +43,10 @@ endif()
 
 option(PERFORM_STYLE_CHECKS
 	"check coding style, license headers (requires perl)" OFF)
+option(BUILD_TESTS "build and enable tests" ON)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
-	option(BUILD_TESTS "build and enable tests" ON)
 	option(BUILD_EXAMPLES "build examples" ON)
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv(32|64))$")
-	option(BUILD_TESTS "build and enable tests" OFF)
 	option(BUILD_EXAMPLES "build examples" OFF)
 endif()
 option(TREAT_WARNINGS_AS_ERRORS
@@ -55,6 +54,28 @@ option(TREAT_WARNINGS_AS_ERRORS
 option(EXPECT_SPURIOUS_SYSCALLS
 	"account for some unexpected syscalls in tests - enable while using sanitizers, gcov" OFF)
 option(STATIC_CAPSTONE "statically link libcapstone into the shared library" OFF)
+
+#####################################
+# External projects
+#####################################
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/capstone)
+
+set(CAPSTONE_INCLUDE_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/capstone/_deps/capstone-src/include/capstone")
+set(CAPSTONE_LIB_FOLDER "${CMAKE_CURRENT_BINARY_DIR}/capstone/_deps/capstone-build")
+
+execute_process(
+        COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DBUILD_SHARED_LIBS=ON
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+        "${CMAKE_CURRENT_SOURCE_DIR}/capstone"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/capstone"
+)
+
+execute_process(COMMAND make
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/capstone"
+)
 
 find_program(CTAGS ctags)
 if(CTAGS)
@@ -68,7 +89,7 @@ set(SYSCALL_INTERCEPT_VERSION_PATCH 0)
 set(SYSCALL_INTERCEPT_VERSION
 	${SYSCALL_INTERCEPT_VERSION_MAJOR}.${SYSCALL_INTERCEPT_VERSION_MINOR}.${SYSCALL_INTERCEPT_VERSION_PATCH})
 
-include(cmake/find_capstone.cmake)
+
 include(GNUInstallDirs)
 include(cmake/toolchain_features.cmake)
 include(CheckLanguage)
@@ -105,10 +126,9 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv(32|64))$")
 	)
 endif()
 
-# set the following directories according with your installation of capstone
-include_directories(include "/usr/local/include/capstone")
-include_directories(${PROJECT_SOURCE_DIR}/src)
-link_directories("/usr/local/lib")
+
+include_directories(include ${PROJECT_SOURCE_DIR}/src ${CAPSTONE_INCLUDE_FOLDER})
+link_directories(${CAPSTONE_LIB_FOLDER})
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 

@@ -45,6 +45,8 @@ static int hook(long syscall_number,
                 long arg4, long arg5,
                 long *result)
 {
+    (void) result;
+
     if (syscall_number == SYS_mkdirat) {
         char buf[128] = "wrongdir/";
         char *tmp = buf;

@@ -110,8 +110,14 @@ intercept_wrapper:
     /* argument passed to intercept_routine */
     mv a0, sp
 
-    jal intercept_routine
+    li t0, 1
+    beq t5, t0, l0 # which function should be called?
 
+    jal intercept_routine
+    j l1
+l0:
+    jal intercept_routine_post_clone
+l1:
     /*
      * At this point, the return value of the C
      * function (a struct wrapper_ret instance) is in a0, a1.
@@ -130,7 +136,14 @@ intercept_wrapper:
     ld t3, 32(sp)
     ld t4, 40(sp)
 
-    /* no point in restoring in context values at 48(sp), 56(sp) and 64(sp) */
+    /*
+     * No point in restoring in context values at 48(sp) and 56(sp), while a0
+     * must be restored only if system call has not been handled yet
+     */
+    li a1, 1
+    beq t6, a1, handled_ecall
+    ld a0, 64(sp)
+handled_ecall:
     ld a1, 72(sp)
     ld a2, 80(sp)
     ld a3, 88(sp)

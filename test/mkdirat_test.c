@@ -30,32 +30,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "libsyscall_intercept_hook_point.h"
+/*
+ * The following test assumes 4096 bytes as the smallest page size. It
+ * therefore makes sense on those architectures compliant with that
+ * assumption, as both amd64 and riscv64 are. Following that assumption,
+ * a brk(0) would result in an increase of the program break by 4096 bytes
+ */
 
-#include <syscall.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <sys/stat.h>
 
-
-static int hook(long syscall_number,
-                long arg0, long arg1,
-                long arg2, long arg3,
-                long arg4, long arg5,
-                long *result)
-{
-    if (syscall_number == SYS_statx) {
-        const char file2[] = "testfile2.txt";
-        const char *tmp = file2;
-        if (strcmp((char *)arg1, tmp) == 0) {
-            const char testfile[] = "testfile.txt";
-            syscall_no_intercept(syscall_number, arg0, testfile, arg2, arg3, arg4, arg5, result);
-            return 0;
-        }
-    }
-    return 1;
-}
-
-static __attribute__((constructor)) void init(void)
-{
-    intercept_hook_point = hook;
+int main() {
+	system("rm -rf testdir/");
+    mkdirat(AT_FDCWD,"wrongdir/", 0777);
+    int fd = openat(AT_FDCWD, "testdir/testdirfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
+    assert(fd != -1);
+    write(1, "MKDIRAT TEST - OK\n", 18);
+    return 0;
 }

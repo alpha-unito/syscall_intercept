@@ -30,27 +30,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
+#include "libsyscall_intercept_hook_point.h"
+
+#include <syscall.h>
 #include <unistd.h>
 #include <string.h>
-#include <stdio.h>
-#include <sys/syscall.h>
-#include <sys/stat.h>
-#include <linux/stat.h>
-#include <fcntl.h>
-#include <assert.h>
 
-int main() {
-    int fd = openat(AT_FDCWD, "testfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-    struct statx stx;
-    statx(AT_FDCWD, "testfile.txt", 0, STATX_BASIC_STATS | STATX_BTIME, &stx);
 
-    int fd2 = openat(AT_FDCWD, "testfile2.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-    struct statx stx2;
-    statx(AT_FDCWD, "testfile2.txt", 0, STATX_BASIC_STATS | STATX_BTIME, &stx2);
+static int hook(long syscall_number,
+                long arg0, long arg1,
+                long arg2, long arg3,
+                long arg4, long arg5,
+                long *result)
+{
+    (void) result;
 
-    assert(stx.stx_ino ==  stx2.stx_ino);
-    write(1, "STATX TEST - OK\n", 16);
+    if (syscall_number == SYS_statx) {
+        const char file2[] = "testfile2.txt";
+        const char *tmp = file2;
+        if (strcmp((char *)arg1, tmp) == 0) {
+            const char testfile[] = "testfile.txt";
+            syscall_no_intercept(syscall_number, arg0, testfile, arg2, arg3, arg4, arg5, result);
+            return 0;
+        }
+    }
+    return 1;
+}
 
-    return 0;
+static __attribute__((constructor)) void init(void)
+{
+    intercept_hook_point = hook;
 }

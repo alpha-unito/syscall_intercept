@@ -8,6 +8,8 @@ build/
 .idea/
 cmake-build-debug/
 test/*.so
-test/riscv/bin/
-test/riscv/build/
-test/riscv/*.txt
+test/bin/
+test/build/
+test/testdir/
+test/testfile.txt
+test/testfile2.txt

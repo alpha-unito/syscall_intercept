@@ -51,12 +51,12 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_stat
 	SARGS(stat, rdec, arg_cstr, arg_pointer),
 #endif
-	SARGS(fstat, rdec, arg_fd, arg_pointer),
+	SARGS(fstat, rdec, arg_atfd, arg_pointer),
 #ifdef SYS_lstat
 	SARGS(lstat, rdec, arg_cstr, arg_pointer),
 #endif
 #ifdef SYS_poll
-	SARGS(poll, rdec, arg_pointer, arg_, arg_),
+	SARGS(poll, rdec, arg_pointer, arg_dec, arg_dec),
 #endif
 	SARGS(lseek, rdec, arg_fd, arg_dec, arg_seek_whence),
 	SARGS(mmap, rpointer, arg_pointer, arg_, arg_, arg_, arg_fd, arg_),
@@ -118,7 +118,7 @@ static const struct syscall_format formats[] = {
 	SARGS(socketpair, rdec, arg_, arg_, arg_, arg_),
 	SARGS(setsockopt, rdec, arg_fd, arg_, arg_, arg_, arg_),
 	SARGS(getsockopt, rdec, arg_fd, arg_, arg_, arg_, arg_),
-	SARGS(clone, rdec, arg_clone_flags, arg_pointer, arg_pointer, arg_pointer, arg_),
+	SARGS(clone, rdec, arg_clone_flags, arg_pointer, arg_pointer, arg_, arg_),
 #ifdef SYS_fork
 	SARGS(fork, rdec, arg_none),
 #endif
@@ -200,6 +200,7 @@ static const struct syscall_format formats[] = {
 	SARGS(geteuid, rdec, arg_none),
 	SARGS(getegid, rdec, arg_none),
 	SARGS(setpgid, rdec, arg_none),
+	SARGS(getppid, rdec, arg_none),
 #ifdef SYS_getpgrp
 	SARGS(getpgrp, rdec, arg_none),
 #endif
@@ -285,6 +286,12 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_ioperm
 	SARGS(ioperm, rdec, arg_, arg_, arg_),
 #endif
+#ifdef SYS_create_module
+	SARGS(create_module, rpointer, arg_pointer, arg_dec),
+#endif
+	SARGS(init_module, rdec, arg_pointer, arg_dec, arg_pointer),
+	SARGS(delete_module, rdec, arg_cstr, arg_),
+	SARGS(quotactl, rdec, arg_dec, arg_pointer, arg_dec, arg_pointer),
 	SARGS(gettid, rdec, arg_none),
 	SARGS(readahead, rdec, arg_fd, arg_dec, arg_dec),
 	SARGS(setxattr, rdec, arg_cstr, arg_cstr, arg_buf_in, arg_dec, arg_),
@@ -372,7 +379,7 @@ static const struct syscall_format formats[] = {
 #ifdef SYS_futimesat
 	SARGS(futimesat, rdec, arg_atfd, arg_cstr, arg_),
 #endif
-	SARGS(newfstatat, rdec, arg_atfd, arg_cstr, arg_, arg_),
+	SARGS(newfstatat, rdec, arg_atfd, arg_cstr, arg_pointer, arg_),
 	SARGS(unlinkat, rdec, arg_atfd, arg_cstr, arg_),
 #ifdef SYS_renameat
 	SARGS(renameat, rdec, arg_atfd, arg_cstr, arg_atfd, arg_cstr),
@@ -381,11 +388,11 @@ static const struct syscall_format formats[] = {
 	SARGS(symlinkat, rdec, arg_cstr, arg_atfd, arg_cstr),
 	SARGS(readlinkat, rdec, arg_atfd, arg_cstr, arg_buf_out, arg_dec),
 	SARGS(fchmodat, rdec, arg_atfd, arg_cstr, arg_oct_mode),
-	SARGS(faccessat, rdec, arg_atfd, arg_cstr, arg_oct_mode),
+	SARGS(faccessat, rdec, arg_atfd, arg_cstr, arg_access_mode),
 	SARGS(pselect6, rdec, arg_, arg_, arg_, arg_, arg_, arg_),
-	SARGS(ppoll, rdec, arg_, arg_, arg_, arg_, arg_),
+	SARGS(ppoll, rdec, arg_pointer, arg_dec, arg_, arg_, arg_dec),
 	SARGS(unshare, rdec, arg_),
-	SARGS(set_robust_list, rdec, arg_, arg_),
+	SARGS(set_robust_list, rdec, arg_, arg_dec),
 	SARGS(get_robust_list, rdec, arg_, arg_, arg_),
 	SARGS(splice, rdec, arg_fd, arg_, arg_fd, arg_, arg_, arg_),
 	SARGS(tee, rdec, arg_fd, arg_fd, arg_, arg_),

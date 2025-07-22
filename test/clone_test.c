@@ -29,41 +29,51 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
-/*
- * see openat_test.c for details about this test library, which must be compiled with
- * gcc -o intercept_sys_openat.so intercept_sys_write.c -I../include -L../build -lsyscall_intercept -fpic -shared
- */
-
-#include "libsyscall_intercept_hook_point.h"
-#include <syscall.h>
+#include <sched.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <assert.h>
 #include <fcntl.h>
 #include <string.h>
-#include <stdint.h>
+#include <stdlib.h>
 
+int child_func(void *arg) {
+    pid_t ppid = *(pid_t *)arg;
+    int fd = openat(AT_FDCWD, "testfile.txt", O_RDONLY);
+    char buf[128];
+    int n = read(fd, buf, sizeof(buf));
+    buf[n] = '\0';
+    n = atoi(buf);
+    assert(n == ppid);
+    return 0;
+}
 
-static int hook(long syscall_number,
-                long arg0, long arg1,
-                long arg2, long arg3,
-                long arg4, long arg5,
-                long *result)
-{
+int main() {
+    char child_stack[8192];
+    pid_t ppid = getpid();
+    pid_t pid = clone(child_func, child_stack + sizeof(child_stack),
+                        SIGCHLD, &ppid);
 
-    if (syscall_number == SYS_openat) {
-        const char non_existing[] = "non_existing.txt";
-        const char *tmp = non_existing;
-        if (strcmp((char *)arg1, tmp) == 0) {
-            const char testfile[] = "testfile.txt";
-            long flags = O_WRONLY;
-            *result = syscall_no_intercept(SYS_openat, arg0, (uintptr_t)testfile,
-                                           flags, arg3, arg4, arg5);
-            return 0;
-        }
+    if (pid == -1) {
+        perror("Clone failed");
+        return 1;
     }
-    return 1;
+
+    int status;
+    wait(&status);
+    if (WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT) {
+        fprintf(stderr, "Child assertion failed\n");
+        return 1;
+    }
+
+    write(1, "CLONE TEST - OK\n", 16);
+    return 0;
 }
 
-static __attribute__((constructor)) void init(void)
-{
-    intercept_hook_point = hook;
-}
+

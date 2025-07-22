@@ -42,6 +42,14 @@ static int hook(long syscall_number,
                 long arg4, long arg5,
                 long *result)
 {
+    (void) arg0;
+    (void) arg1;
+    (void) arg2;
+    (void) arg3;
+    (void) arg4;
+    (void) arg5;
+    (void) result;
+
     if (syscall_number == SYS_clone) {
         int fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
         dprintf(fd,"%d\n",getpid());

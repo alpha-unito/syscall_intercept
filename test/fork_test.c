@@ -29,28 +29,50 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
-/*
- * The following test assumes 4096 bytes as the smallest page size. It
- * therefore makes sense on those architectures compliant with that
- * assumption, as both amd64 and riscv64 are. Following that assumption,
- * a brk(0) would result in an increase of the program break by 4096 bytes
- */
-
-#include <unistd.h>
-#include <string.h>
 #include <stdio.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <assert.h>
+#include <sys/wait.h>
 #include <stdlib.h>
-#include <sys/stat.h>
+#include <assert.h>
+#include <fcntl.h>
 
 int main() {
-    mkdirat(AT_FDCWD,"wrongdir/", 0777);
-    int fd = openat(AT_FDCWD, "testdir/testdirfile.txt", O_RDWR | O_CREAT | O_TRUNC, 0666);
-    assert(fd != -1);
-    system("rm -rf testdir/");
-    write(1, "MKDIRAT TEST - OK\n", 18);
+
+    int fd = openat(AT_FDCWD, "testfile.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
+    int fd2 = openat(AT_FDCWD, "testfile2.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
+
+    pid_t pid = fork();
+    int n, n2;
+    char buf[128];
+    char buf2[128];
+
+    switch(pid) {
+        case -1:
+            perror("fork failed\n");
+            break;
+        case 0:
+            n = read(fd, buf, sizeof(buf));
+            buf[n] = '\0';
+            n = atoi(buf);
+            assert(n == getpid());
+            exit(EXIT_SUCCESS);
+            break;
+        default:
+            n2 = read(fd2, buf2, sizeof(buf2));
+            buf2[n2] = '\0';
+            n2 = atoi(buf2);
+            assert(n2 == getpid());
+            int status;
+    	    wait(&status);
+    	    if (WIFSIGNALED(status) && WTERMSIG(status) == SIGABRT) {
+            	fprintf(stderr, "Child assertion failed\n");
+            	return 1;
+    	    }
+
+	    break;
+    }
     return 0;
 }
