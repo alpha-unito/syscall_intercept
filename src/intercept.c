@@ -152,6 +152,53 @@ void __attribute__((noreturn)) xlongjmp(long rip, long rsp, long rax);
 	struct wrapper_ret {
 		long a[2];
 	};
+#elif defined(__aarch64__) || defined(_M_ARM64)
+	/*
+	 * Kernel clobbers no register while serving a syscall in aarch64.
+	 * So the assembly wrapper (intercept_wrapper.S) must do the same.
+	 * The layout of this struct depends on the way the
+	 * assembly wrapper saves register on the stack.
+	 */
+	struct context {
+		struct patch_desc *patch_desc;
+		long x0;
+		long x1;
+		long x2;
+		long x3;
+		long x4;
+		long x5;
+		long x6;
+		long x7;
+		long x8;
+		long x9;
+		long x10;
+		long x11;
+		long x12;
+		long x13;
+		long x14;
+		long x15;
+		long x16;
+		long x17;
+		long x18;
+		long x19;
+		long x20;
+		long x21;
+		long x22;
+		long x23;
+		long x24;
+		long x25;
+		long x26;
+		long x27;
+		long x28;
+		long x29; /* fp */
+		long x30; /* lr */
+		long x31;
+	};
+
+	struct wrapper_ret {
+		long x0;
+		long x1;
+	};
 #else
 	#error "Unsupported ISA"
 #endif
@@ -447,38 +494,44 @@ analyze_object(struct dl_phdr_info *info, size_t size, void *data)
 	patches->base_addr = (unsigned char *)info->dlpi_addr;
 	patches->path = path;
 	find_syscalls(patches);
-
+#if defined(__aarch64__) || defined(_M_ARM64)
+	allocate_trampoline_table(patches);
+	create_patch_wrappers(patches);
+#endif
 	return 0;
 }
 
 const char *cmdline;
+size_t page_size;
 
 static unsigned char asm_wrapper_space[0x100000];
 static unsigned char *next_asm_wrapper_space = asm_wrapper_space + PAGE_SIZE;
 
-static bool
-is_asm_wrapper_space_full(void)
-{
-	return next_asm_wrapper_space + asm_wrapper_tmpl_size + 256 >
-			asm_wrapper_space + sizeof(asm_wrapper_space);
-}
+#if !defined(__aarch64__) && !defined(_M_ARM64)
+	static bool
+	is_asm_wrapper_space_full(void)
+	{
+		return next_asm_wrapper_space + asm_wrapper_tmpl_size + 256 >
+				asm_wrapper_space + sizeof(asm_wrapper_space);
+	}
 
-/*
- * mprotect_asm_wrappers
- * The code generated into the data segment at the asm_wrapper_space
- * array is not executable by default. This routine sets that memory region
- * to be executable, must called before attempting to execute any patched
- * syscall.
- */
-void
-mprotect_asm_wrappers(void)
-{
-	mprotect_no_intercept(
-	    round_down_address(asm_wrapper_space + PAGE_SIZE),
-	    sizeof(asm_wrapper_space) - PAGE_SIZE,
-	    PROT_READ | PROT_EXEC,
-	    "mprotect_asm_wrappers PROT_READ | PROT_EXEC");
-}
+	/*
+	 * mprotect_asm_wrappers
+	 * The code generated into the data segment at the asm_wrapper_space
+	 * array is not executable by default. This routine sets that memory region
+	 * to be executable, must be called before attempting to execute any patched
+	 * syscall.
+	 */
+	void
+	mprotect_asm_wrappers(void)
+	{
+		mprotect_no_intercept(
+		    round_down_address(asm_wrapper_space + PAGE_SIZE),
+		    sizeof(asm_wrapper_space) - PAGE_SIZE,
+		    PROT_READ | PROT_EXEC,
+		    "mprotect_asm_wrappers PROT_READ | PROT_EXEC");
+	}
+#endif
 
 /*
  * intercept - This is where the highest level logic of hotpatching
@@ -496,6 +549,7 @@ intercept(int argc, char **argv)
 {
 	(void) argc;
 	cmdline = argv[0];
+	page_size = (size_t)getauxval(AT_PAGESZ);
 
 	if (!syscall_hook_in_process_allowed())
 		return;
@@ -511,13 +565,14 @@ intercept(int argc, char **argv)
 	dl_iterate_phdr(analyze_object, NULL);
 	if (!libc_found)
 		xabort("libc not found");
-
+#if !defined(__aarch64__) && !defined(_M_ARM64)
 	for (unsigned i = 0; i < objs_count; ++i) {
 		if (objs[i].count > 0 && is_asm_wrapper_space_full())
 			xabort("not enough space in asm_wrapper_space");
 		allocate_trampoline_table(objs + i);
 		create_patch_wrappers(objs + i, &next_asm_wrapper_space);
 	}
+#endif
 	mprotect_asm_wrappers();
 	for (unsigned i = 0; i < objs_count; ++i)
 		activate_patches(objs + i);
@@ -695,9 +750,9 @@ intercept_routine(struct context *context)
 		    desc.args[4],
 		    desc.args[5],
 		    &result);
-#if defined(__x86_64__) || defined(_M_X64)
+#if defined(SYS_vfork)
 	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn) {
-#elif defined(__riscv)
+#else
 	if (desc.nr == SYS_rt_sigreturn) {
 #endif
 		/* can't handle these syscalls the normal way */
