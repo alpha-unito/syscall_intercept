@@ -69,9 +69,9 @@
  *
  */
 
-#include "intercept.h"
-#include "intercept_util.h"
-#include "intercept_log.h"
+#include <intercept.h>
+#include <intercept_util.h>
+#include <intercept_log.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -80,10 +80,6 @@
 #include <string.h>
 
 #include <stdio.h>
-
-static void
-mprotect_no_intercept(void *addr, size_t len, int prot,
-		const char *msg_on_error);
 
 /* The size of a trampoline jump, jmp instruction + pointer */
 enum { TRAMPOLINE_SIZE = 6 + 8 };
