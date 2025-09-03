@@ -313,15 +313,6 @@ create_wrapper(struct patch_desc *patch)
 	next_asm_wrapper_space = dst;
 }
 
-static void
-mprotect_no_intercept(void *addr, size_t len, int prot,
-			const char *msg_on_error)
-{
-	long result = syscall_no_intercept(SYS_mprotect, addr, len, prot);
-
-	xabort_on_syserror(result, msg_on_error);
-}
-
 /*
  * activate_patches()
  * Loop over all the patches, and and overwrite each syscall.
