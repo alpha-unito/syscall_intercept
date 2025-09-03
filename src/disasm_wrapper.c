@@ -51,6 +51,9 @@
 #elif defined(__riscv)
 	#define CS_ARCH CS_ARCH_RISCV
 	#define CS_MODE CS_MODE_RISCV64 | CS_MODE_RISCVC
+#elif defined(__aarch64__) || defined(_M_ARM64)
+	#define CS_ARCH CS_ARCH_ARM64
+	#define CS_MODE CS_MODE_LITTLE_ENDIAN
 #else
 	#error "Unsupported ISA"
 #endif

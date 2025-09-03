@@ -211,7 +211,11 @@ void allocate_trampoline_table(struct intercept_desc *desc);
 void find_syscalls(struct intercept_desc *desc);
 
 void init_patcher(void);
-void create_patch_wrappers(struct intercept_desc *desc, unsigned char **dst);
+#if defined(__x86_64__) || defined(_M_X64) || defined(__riscv)
+	void create_patch_wrappers(struct intercept_desc *desc, unsigned char **dst);
+#else
+	void create_patch_wrappers(struct intercept_desc *desc);
+#endif
 void mprotect_asm_wrappers(void);
 
 /*
@@ -220,7 +224,7 @@ void mprotect_asm_wrappers(void);
 void activate_patches(struct intercept_desc *desc);
 
 #if defined(__x86_64__) || defined(_M_X64)
-	#define PARAM_BY_ARCH(opt1, opt2) opt1
+	#define PARAM_BY_ARCH(opt1, opt2, opt3) opt1
 	#define CALL_OPCODE 0xe8
 	#define JMP_OPCODE 0xe9
 	#define SHORT_JMP_OPCODE 0xeb
@@ -228,39 +232,49 @@ void activate_patches(struct intercept_desc *desc);
 	#define NOP_OPCODE 0x90
 	#define INT3_OPCODE 0xCC
 #elif defined(__riscv)
-	#define PARAM_BY_ARCH(opt1, opt2) opt2
+	#define PARAM_BY_ARCH(opt1, opt2, opt3) opt2
+#elif defined(__aarch64__) || defined(_M_ARM64)
+	#define PARAM_BY_ARCH(opt1, opt2, opt3) opt3
+	#define INSTRUCTION_SIZE 4
 #else
 	#error "Unsupported ISA"
 #endif
 
-#define SYSCALL_INS_SIZE PARAM_BY_ARCH(2, 4)
-#define JUMP_INS_SIZE PARAM_BY_ARCH(5,8)
-#define SYSCALL_NR PARAM_BY_ARCH(context->rax,context->a[7])
-#define THREAD_PID PARAM_BY_ARCH(context->rax,context->a[0])
-#define FIRST_ARG_REG PARAM_BY_ARCH(context->rdi,context->a[0])
-#define SECOND_ARG_REG PARAM_BY_ARCH(context->rsi,context->a[1])
-#define THIRD_ARG_REG PARAM_BY_ARCH(context->rdx,context->a[2])
-#define FOURTH_ARG_REG PARAM_BY_ARCH(context->r10,context->a[3])
-#define FIFTH_ARG_REG PARAM_BY_ARCH(context->r8,context->a[4])
-#define SIXTH_ARG_REG PARAM_BY_ARCH(context->r9,context->a[5])
-#define FIRST_RET_REG PARAM_BY_ARCH(.rax,.a[0])
-#define SECOND_RET_REG PARAM_BY_ARCH(.rdx,.a[1])
+#define SYSCALL_INS_SIZE PARAM_BY_ARCH(2,4,4)
+#define JUMP_INS_SIZE PARAM_BY_ARCH(5,8,4)
+#define SYSCALL_NR PARAM_BY_ARCH(context->rax,context->a[7],context->x8)
+#define THREAD_PID PARAM_BY_ARCH(context->rax,context->a[0],context->x0)
+#define FIRST_ARG_REG PARAM_BY_ARCH(context->rdi,context->a[0],context->x0)
+#define SECOND_ARG_REG PARAM_BY_ARCH(context->rsi,context->a[1],context->x1)
+#define THIRD_ARG_REG PARAM_BY_ARCH(context->rdx,context->a[2],context->x2)
+#define FOURTH_ARG_REG PARAM_BY_ARCH(context->r10,context->a[3],context->x3)
+#define FIFTH_ARG_REG PARAM_BY_ARCH(context->r8,context->a[4],context->x4)
+#define SIXTH_ARG_REG PARAM_BY_ARCH(context->r9,context->a[5],context->x5)
+#define FIRST_RET_REG PARAM_BY_ARCH(.rax,.a[0],.x0)
+#define SECOND_RET_REG PARAM_BY_ARCH(.rdx,.a[1],.x1)
 #define ABS_MAX_NEG_OFFSET PARAM_BY_ARCH(INT32_MAX,((long)INT32_MAX+0x800))
 #define ABS_MAX_POS_OFFSET PARAM_BY_ARCH(INT32_MAX,INT32_MAX-0x801)
 
 bool is_overwritable_nop(const struct intercept_disasm_result *ins);
 
-void create_jump(unsigned char opcode, unsigned char *from, void *to);
+#if defined(__x86_64__) || defined(_M_X64)
+	void create_jump(unsigned char opcode, unsigned char *from, void *to);
+#elif defined(__aarch64__) || defined(_M_ARM64)
+	unsigned char *create_jump(unsigned char *from, void *to);
+	extern size_t page_size;
+#endif
 
 extern const char *cmdline;
 
 #define PAGE_SIZE ((size_t)0x1000)
 
-static inline unsigned char *
-round_down_address(unsigned char *address)
-{
-	return (unsigned char *)(((uintptr_t)address) & ~(PAGE_SIZE - 1));
-}
+#if !defined(__aarch64__) && !defined(_M_ARM64)
+	static inline unsigned char *
+	round_down_address(unsigned char *address)
+	{
+		return (unsigned char *)(((uintptr_t)address) & ~(PAGE_SIZE - 1));
+	}
+#endif
 
 /* The size of an asm wrapper instance */
 extern size_t asm_wrapper_tmpl_size;
