@@ -15,4 +15,5 @@ test:
   script:
     - apt-get update
     - apt-get install -y cmake
+    - cd "${CI_BUILDS_DIR}"
     - ctest -C "${CI_BUILDS_DIR}" Release
