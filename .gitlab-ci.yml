@@ -8,6 +8,7 @@ build:
   script:
     - apt-get update
     - apt-get install -y cmake
+    - ldd --version | head -n 1
     - cmake -B "${CI_BUILDS_DIR}" -DCMAKE_BUILD_TYPE=Release
     - cmake --build "${CI_BUILDS_DIR}" --config Release
 test:
