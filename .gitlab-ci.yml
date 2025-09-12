@@ -1,0 +1,18 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == $CI_DEFAULT_BRANCH
+image: gcc:14.3.0
+build:
+  stage: build
+  script:
+    - apt-get update
+    - apt-get install -y cmake
+    - cmake -B "${CI_BUILDS_DIR}" -DCMAKE_BUILD_TYPE=Release
+    - cmake --build "${CI_BUILDS_DIR}" --config Release
+test:
+  stage: test
+  script:
+    - apt-get update
+    - apt-get install -y cmake
+    - ctest -C "${CI_BUILDS_DIR}" Release
