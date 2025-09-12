@@ -10,6 +10,9 @@ build:
     - apt-get install -y cmake
     - cmake -B "${CI_BUILDS_DIR}" -DCMAKE_BUILD_TYPE=Release
     - cmake --build "${CI_BUILDS_DIR}" --config Release
+  artifacts:
+    paths:
+      - "${CI_BUILDS_DIR}"
 test:
   stage: test
   script:
