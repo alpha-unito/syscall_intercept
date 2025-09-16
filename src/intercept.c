@@ -696,7 +696,8 @@ intercept_routine(struct context *context)
 		    desc.args[5],
 		    &result);
 #if defined(__x86_64__) || defined(_M_X64)
-	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn) {
+	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn ||
+		(desc.nr == SYS_clone && desc.args[0] & CLONE_VFORK)) {
 #elif defined(__riscv)
 	if (desc.nr == SYS_rt_sigreturn) {
 #endif
