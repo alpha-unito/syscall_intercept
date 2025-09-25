@@ -101,3 +101,5 @@ text_start:
 		.byte   0x00
 		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits

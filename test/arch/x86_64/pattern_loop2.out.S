@@ -58,3 +58,5 @@ text_start:
 		int3
 		loop    .L0
 text_end:
+
+.section .note.GNU-stack,"",@progbits

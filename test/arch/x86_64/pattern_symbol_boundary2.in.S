@@ -62,3 +62,5 @@ dummy_symbol1:	syscall
 		inc     rax
 		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits

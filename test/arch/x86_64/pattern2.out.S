@@ -63,3 +63,5 @@ text_start:
 		int3
 		int3
 text_end:
+
+.section .note.GNU-stack,"",@progbits

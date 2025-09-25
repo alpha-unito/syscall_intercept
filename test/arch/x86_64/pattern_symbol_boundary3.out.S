@@ -56,3 +56,5 @@ dummy_symbol:	not     rax
 0:		jmp     dst0
 		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits
