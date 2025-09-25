@@ -6,6 +6,7 @@ test:
   parallel:
     matrix:
       - GCC_VERSION:
+          - 11.4.0
           - 12.4.0
           - 12.5.0
           - 13.3.0
