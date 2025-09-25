@@ -18,3 +18,4 @@ test:
     - cmake --build "${CI_BUILDS_DIR}" --config Release
     - cd "${CI_BUILDS_DIR}"
     - ctest -C "${CI_BUILDS_DIR}" Release
+    - cat /builds/Testing/Temporary/LastTest.log
