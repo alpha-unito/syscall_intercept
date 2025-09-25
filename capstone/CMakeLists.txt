@@ -11,5 +11,6 @@ FetchContent_Declare(capstone
         GIT_TAG accf4df62f1fba6f92cae692985d27063552601c
 )
 
-FetchContent_MakeAvailable(capstone)
+message("-- Fetching Capstone v5.0.6...")
 
+FetchContent_MakeAvailable(capstone)
