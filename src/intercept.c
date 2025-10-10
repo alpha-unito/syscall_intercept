@@ -744,12 +744,12 @@ intercept_routine(struct context *context)
 		 * Here clone calls with arg[1] == 0 are granted the execution
 		 * of their post_clone hook functions
 		 */
-		if (desc.nr == SYS_clone) {
+		if (desc.nr == SYS_clone || desc.nr == SYS_fork) {
 			THREAD_PID = result;
 			intercept_routine_post_clone(context);
 		}
 #ifdef SYS_clone3
-		else if (desc.nr == SYS_clone3) {
+		else if (desc.nr == SYS_clone3 || desc.nr == SYS_fork) {
 			THREAD_PID = result;
 			intercept_routine_post_clone(context);
 		}
