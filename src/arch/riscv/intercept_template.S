@@ -36,9 +36,13 @@
  */
 
 .globl intercept_asm_wrapper_tmpl
+.hidden intercept_asm_wrapper_tmpl
 .globl intercept_asm_wrapper_patch_desc_addr
+.hidden intercept_asm_wrapper_patch_desc_addr
 .globl intercept_asm_wrapper_wrapper_level1_addr
+.hidden intercept_asm_wrapper_wrapper_level1_addr
 .globl intercept_asm_wrapper_tmpl_end
+.hidden intercept_asm_wrapper_tmpl_end
 
 .text
 
