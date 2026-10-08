@@ -756,7 +756,7 @@ intercept_routine(struct context *context)
 	if (desc.nr == SYS_rt_sigreturn) {
 #endif
 		/* can't handle these syscalls the normal way */
-		return (struct wrapper_ret){FIRST_RET_REG = FIRST_ARG_REG, SECOND_RET_REG = 0 };
+		return (struct wrapper_ret){FIRST_RET_REG = FIRST_SYSCALL_ARG_REG, SECOND_RET_REG = 0 };
 	}
 
 	if (forward_to_kernel) {
@@ -775,13 +775,13 @@ intercept_routine(struct context *context)
 
 		if (desc.nr == SYS_clone && desc.args[1] != 0) {
 			return (struct wrapper_ret){
-				FIRST_RET_REG = FIRST_ARG_REG, SECOND_RET_REG = 2 };
+				FIRST_RET_REG = FIRST_SYSCALL_ARG_REG, SECOND_RET_REG = 2 };
 		}
 #ifdef SYS_clone3
 		else if (desc.nr == SYS_clone3 &&
 			((struct clone_args *)desc.args[0])->stack != 0) {
 			return (struct wrapper_ret){
-				FIRST_RET_REG = FIRST_ARG_REG, SECOND_RET_REG = 2 };
+				FIRST_RET_REG = FIRST_SYSCALL_ARG_REG, SECOND_RET_REG = 2 };
 		}
 #endif
 		else
