@@ -751,9 +751,11 @@ intercept_routine(struct context *context)
 		    desc.args[5],
 		    &result);
 #if defined(SYS_vfork)
-	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn) {
+	if (desc.nr == SYS_vfork || desc.nr == SYS_rt_sigreturn ||
+	    (desc.nr == SYS_clone && desc.args[0] & CLONE_VFORK)) {
 #else
-	if (desc.nr == SYS_rt_sigreturn) {
+	if (desc.nr == SYS_rt_sigreturn ||
+	    (desc.nr == SYS_clone && desc.args[0] & CLONE_VFORK)) {
 #endif
 		/* can't handle these syscalls the normal way */
 		return (struct wrapper_ret){FIRST_RET_REG = FIRST_SYSCALL_ARG_REG, SECOND_RET_REG = 0 };
@@ -798,12 +800,12 @@ intercept_routine(struct context *context)
 		 * Here clone calls with arg[1] == 0 are granted the execution
 		 * of their post_clone hook functions
 		 */
-		if (desc.nr == SYS_clone) {
+		if (desc.nr == SYS_clone || desc.nr == SYS_fork) {
 			THREAD_PID = result;
 			intercept_routine_post_clone(context);
 		}
 #ifdef SYS_clone3
-		else if (desc.nr == SYS_clone3) {
+		else if (desc.nr == SYS_clone3 || desc.nr == SYS_fork) {
 			THREAD_PID = result;
 			intercept_routine_post_clone(context);
 		}
