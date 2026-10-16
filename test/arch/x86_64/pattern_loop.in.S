@@ -52,3 +52,5 @@ text_start:
 		syscall
 		loop    .L0 # this instruction should not be touched
 text_end:
+
+.section .note.GNU-stack,"",@progbits

@@ -72,3 +72,5 @@ text_start:
 		inc     rax
 		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits

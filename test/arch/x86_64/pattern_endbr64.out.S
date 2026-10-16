@@ -49,3 +49,5 @@ text_start:
 		cmp     rax, -1
 		cmp     rax, -1
 text_end:
+
+.section .note.GNU-stack,"",@progbits

@@ -54,3 +54,5 @@ text_start:
 		syscall
 		loop    .L0 # this one as well
 text_end:
+
+.section .note.GNU-stack,"",@progbits

@@ -55,3 +55,5 @@ fibonacci:
 		ret
 		.cfi_endproc
 text_end:
+
+.section .note.GNU-stack,"",@progbits

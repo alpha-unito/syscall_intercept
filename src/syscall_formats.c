@@ -341,7 +341,7 @@ static const struct syscall_format formats[] = {
 	SARGS(clock_gettime, rdec, arg_, arg_),
 	SARGS(clock_getres, rdec, arg_, arg_),
 	SARGS(clock_nanosleep, rdec, arg_, arg_, arg_, arg_),
-	SARGS(exit_group, rnoreturn, arg_),
+	SARGS(exit_group, rnoreturn, arg_dec),
 #ifdef SYS_epoll_wait
 	SARGS(epoll_wait, rdec, arg_fd, arg_, arg_, arg_),
 #endif
@@ -411,7 +411,7 @@ static const struct syscall_format formats[] = {
 	SARGS(fallocate, rdec, arg_fd, arg_, arg_, arg_),
 	SARGS(timerfd_settime, rdec, arg_fd, arg_, arg_, arg_),
 	SARGS(timerfd_gettime, rdec, arg_fd, arg_),
-	SARGS(accept4, rdec, arg_fd, arg_, arg_, arg_, arg_),
+	SARGS(accept4, rdec, arg_fd, arg_, arg_, arg_),
 	SARGS(signalfd4, rdec, arg_fd, arg_, arg_, arg_, arg_),
 	SARGS(eventfd2, rdec, arg_, arg_),
 	SARGS(epoll_create1, rdec, arg_),

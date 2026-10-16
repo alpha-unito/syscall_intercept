@@ -55,3 +55,5 @@ text_start:
 		.byte   0x00    # second byte of the original nop instruction
 1:		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits

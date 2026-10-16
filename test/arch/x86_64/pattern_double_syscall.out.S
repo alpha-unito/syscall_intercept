@@ -46,3 +46,5 @@ text_start:
 		syscall
 		nop
 text_end:
+
+.section .note.GNU-stack,"",@progbits

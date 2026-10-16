@@ -68,6 +68,7 @@ INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_openat.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_read.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_statx.so
 INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_write.so
+INTERCEPT_LIBS += $(BUILD_DIR)/intercept_sys_monitor.so
 
 all: $(BIN_DIR) $(BUILD_DIR) $(EXECUTABLES) $(INTERCEPT_LIBS)
 

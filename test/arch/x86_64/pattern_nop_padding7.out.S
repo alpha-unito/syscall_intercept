@@ -63,3 +63,5 @@ text_start:
 1:		jmp     dst1
 		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits
