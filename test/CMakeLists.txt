@@ -177,6 +177,8 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86(_64)?)$")
 	set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/x86_64/syscall_format.log.match)
 elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(riscv(32|64))$")
 	set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/riscv/syscall_format.log.match)
+elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64)$")
+    set(MATCH_FILE ${CMAKE_CURRENT_SOURCE_DIR}/arch/aarch64/syscall_format.log.match)
 endif()
 
 add_executable(syscall_format syscall_format.c)

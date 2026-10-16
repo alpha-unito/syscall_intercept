@@ -56,7 +56,7 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64)$")
 endif()
 option(TREAT_WARNINGS_AS_ERRORS
 	"make the build fail on any warnings during compilation, or linking" ON)
-message("-- " ${CMAKE_SYSTEM_PROCESSOR} "detected as target architecture")
+message("-- ${CMAKE_SYSTEM_PROCESSOR} detected as target architecture")
 option(EXPECT_SPURIOUS_SYSCALLS
 	"account for some unexpected syscalls in tests - enable while using sanitizers, gcov" OFF)
 option(STATIC_CAPSTONE "statically link libcapstone into the shared library" OFF)
