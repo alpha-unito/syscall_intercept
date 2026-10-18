@@ -7,8 +7,18 @@
 
 [//]: # ([![Coverity Scan Build Status]&#40;https://scan.coverity.com/projects/12890/badge.svg&#41;]&#40;https://scan.coverity.com/projects/syscall_intercept&#41;)
 
-This repository contains a multi-architecture porting of [syscall_intercept](https://github.com/pmem/syscall_intercept) working on both **x86_64** and **RISC-V**.
-Full-featured support for **aarch64** (ARM64) is in progress.
+This repository contains a multi-architecture version of [syscall_intercept](https://github.com/pmem/syscall_intercept)
+working on **x86** (amd64) and **ARM** (aarch64). It works on **RISC-V** (rv64)
+as well, but support for such architecture is not currently maintained.
+
+ARM support is provided by the [RIKEN porting](https://github.com/RIKEN-SysSoft/syscall_intercept)
+of the original PMem library.
+
+If you need a system call interception library on RISC-V, we recommend using
+[vpoline](https://github.com/alpha-unito/vpoline), our actively maintained library
+enabling exhaustive system call interception specifically designed for RISC-V
+which does not require any root privilege to be used and does not involve any
+heuristic assumption.
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 # Dependencies #
@@ -313,7 +323,7 @@ aa20a: bltu     a5,a0,aa262 <__open+0xaa>   | aa20a: bltu     a5,a0,aa262 <__ope
 
 
 * Only Linux is supported
-* Only x86\_64 and RISC-V are supported
+* x86\_64, ARM and RISC-V are supported
 * Only tested with glibc, although perhaps it works
 with some other libc implementations as well
 * RISC-V version assumes `$t6` is not used as base pointer or as source
