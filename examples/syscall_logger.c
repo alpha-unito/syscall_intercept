@@ -99,7 +99,7 @@ print_cstr(char *dst, const char *str)
 	return dst;
 }
 
-static const char xdigit[16] = "0123456789abcdef";
+static const char xdigit[17] = "0123456789abcdef";
 
 static char *
 print_hex(char *dst, long n)

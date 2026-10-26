@@ -56,3 +56,5 @@ text_start:
 		syscall
 		cmp     rax, -1
 text_end:
+
+.section .note.GNU-stack,"",@progbits

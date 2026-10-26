@@ -51,7 +51,7 @@ hook(long syscall_number,
 	(void) result;
 
 	if (syscall_number == SYS_write) {
-		const char interc[] = "intercepted_";
+		static const char interc[] = "intercepted_";
 		const char *src = interc;
 
 		/* write(fd, buf, len) */

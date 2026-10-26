@@ -120,3 +120,5 @@ text_start:
 		mov     rax, 2
 		inc     rax
 text_end:
+
+.section .note.GNU-stack,"",@progbits

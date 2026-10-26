@@ -67,3 +67,5 @@ asm_wrapper_start:
 		.byte   0x48
 		.byte   0xbf
 asm_wrapper_end:
+
+.section .note.GNU-stack,"",@progbits
