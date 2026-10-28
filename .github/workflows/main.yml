@@ -53,12 +53,15 @@ jobs:
     runs-on: ubuntu-24.04-riscv
     strategy:
       matrix:
-        GCC_MAJOR: [ "12", "13", "14" ]
+        GCC_MAJOR: [ "12", "13", "14", "15" ]
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Packages
         run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
           sudo apt-get update
           sudo apt-get install -y gcc-${{ matrix.GCC_MAJOR }} cmake build-essential pkg-config libcapstone-dev
 
