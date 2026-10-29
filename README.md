@@ -7,8 +7,18 @@
 
 [//]: # ([![Coverity Scan Build Status]&#40;https://scan.coverity.com/projects/12890/badge.svg&#41;]&#40;https://scan.coverity.com/projects/syscall_intercept&#41;)
 
-This repository contains a multi-architecture porting of [syscall_intercept](https://github.com/pmem/syscall_intercept) working on both **x86_64** and **RISC-V**.
-Full-featured support for **aarch64** (ARM64) is in progress.
+This repository contains a multi-architecture version of [syscall_intercept](https://github.com/pmem/syscall_intercept)
+working on **x86** (amd64) and **ARM** (aarch64). It works on **RISC-V** (rv64)
+as well, but support for such architecture is not currently maintained.
+
+ARM support is provided by the [RIKEN porting](https://github.com/RIKEN-SysSoft/syscall_intercept)
+of the original PMem library.
+
+If you need a system call interception library on RISC-V, we recommend using
+[vpoline](https://github.com/alpha-unito/vpoline), our actively maintained library
+enabling exhaustive system call interception specifically designed for RISC-V
+which does not require any root privilege to be used and does not involve any
+heuristic assumption.
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 # Dependencies #
@@ -16,30 +26,30 @@ Full-featured support for **aarch64** (ARM64) is in progress.
 
 ## Runtime dependencies ##
 
- * libcapstone -- the disassembly engine used under the hood
-   (RISC-V support requires version **5.0** or higher, while apt installs version 4.0.2 by default, as february 2025).
-   Since a manual installation of Capstone could not be automatically detected while compiling syscall_intercept, we ensured that libcapstone v5.0.6 is **automatically compiled** from source during the syscall_intercept cmake execution.
+* libcapstone -- the disassembly engine used under the hood
+  (RISC-V support requires version **5.0** or higher, while apt installs version 4.0.2 by default, as february 2025).
+  Since a manual installation of Capstone could not be automatically detected while compiling syscall_intercept, we ensured that libcapstone v5.0.6 is **automatically compiled** from source during the syscall_intercept cmake execution.
 
 ## Build dependencies ##
 
 # Local build dependencies #
 
- * C99 toolchain -- tested with recent versions of GCC and clang
- * cmake
- * perl -- for checking coding style
- * pandoc -- for generating the man page
+* C99 toolchain -- tested with recent versions of GCC and clang
+* cmake
+* perl -- for checking coding style
+* pandoc -- for generating the man page
 
 ### Travis CI build dependencies ###
 
 The travis builds use some scripts to generate a docker images, in which syscall_intercept is built/tested.
 These docker images are pushed to Dockerhub, to be reused in later travis builds.
 The scripts expect four environment variables to be set in the travis environment:
- * DOCKERHUB_REPO - where to store the docker images used for building
-    e.g. in order to refer to a Dockerhub repository at https://hub.docker.com/r/pmem/syscall_intercept, this variable
-    should contain the string "pmem/syscall_intercept"
- * DOCKERHUB_USER - used for logging into Dockerhub
- * DOCKERHUB_PASSWORD - used for logging into Dockerhub
- * GITHUB_REPO - where the repository is available on github (e.g. "pmem/syscall_intercept" )
+* DOCKERHUB_REPO - where to store the docker images used for building
+  e.g. in order to refer to a Dockerhub repository at https://hub.docker.com/r/pmem/syscall_intercept, this variable
+  should contain the string "pmem/syscall_intercept"
+* DOCKERHUB_USER - used for logging into Dockerhub
+* DOCKERHUB_PASSWORD - used for logging into Dockerhub
+* GITHUB_REPO - where the repository is available on github (e.g. "pmem/syscall_intercept" )
 
 ### How to build ###
 
@@ -194,9 +204,9 @@ on the following assumptions:
 - Each syscall made by the application is issued via libc
 - No other facility attempts to hotpatch libc in the same process
 - The libc implementation is already loaded in the processes
-memory space when the intercepting library is being initialized
+  memory space when the intercepting library is being initialized
 - The machine code in the libc implementation is suitable
-for the methods listed in this section
+  for the methods listed in this section
 - For some more basic assumptions, see the section on limitations.
 
 ##### Disassembly: #####
@@ -210,17 +220,17 @@ The destination of the jump (unique for each `syscall` or `ecall`) is a
 small routine, which accomplishes the following tasks:
 
 1. Optionally executes any instruction that originally
-preceded the system call instruction, and was overwritten to
-make space for the jump instruction
+   preceded the system call instruction, and was overwritten to
+   make space for the jump instruction
 2. Saves the current state of all registers to the stack
 3. Translates the arguments (in the registers) from
-the Linux kernel-level ABI calling conventions of the targeted architecture to
-the C user-space functions calling convention
+   the Linux kernel-level ABI calling conventions of the targeted architecture to
+   the C user-space functions calling convention
 4. Calls a function written in C (which in turn calls
-the callback supplied by the library user)
+   the callback supplied by the library user)
 5. Loads the values from the stack back into the registers
 6. Jumps back to libc, to the instruction following the
-overwritten part
+   overwritten part
 
 ### In action: ###
 
@@ -313,14 +323,14 @@ aa20a: bltu     a5,a0,aa262 <__open+0xaa>   | aa20a: bltu     a5,a0,aa262 <__ope
 
 
 * Only Linux is supported
-* Only x86\_64 and RISC-V are supported
+* x86\_64, ARM and RISC-V are supported
 * Only tested with glibc, although perhaps it works
-with some other libc implementations as well
+  with some other libc implementations as well
 * RISC-V version assumes `$t6` is not used as base pointer or as source
-register without being reinitialized after an `ecall` and before the ending of
-a function. While this assumption involves heuristics, this choice was tested 
-on different glibc version, i.e. 2.35, 2.37 and 2.39, and on different kernel
-implementations manifesting a consistent and working behaviour.
+  register without being reinitialized after an `ecall` and before the ending of
+  a function. While this assumption involves heuristics, this choice was tested
+  on different glibc version, i.e. 2.35, 2.37 and 2.39, and on different kernel
+  implementations manifesting a consistent and working behaviour.
 
 # Debugging: #
 
